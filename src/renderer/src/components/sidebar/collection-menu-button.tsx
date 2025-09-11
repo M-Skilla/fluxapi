@@ -67,12 +67,12 @@ const CollectionMenuButton = ({
       handleEditSave()
     } else if (e.key === 'Escape') {
       handleEditCancel()
-    } 
+    }
   }
 
   if (isEditing) {
     return (
-      <SidebarMenuButton className="w-full justify-start hover:bg-primary/30">
+      <SidebarMenuButton className="w-full justify-start hover:bg-primary/30 cursor-pointer">
         <div className="flex items-center gap-2 flex-1">
           <Folder size={16} />
           <Input
@@ -81,6 +81,7 @@ const CollectionMenuButton = ({
             onChange={(e) => setEditName(e.target.value)}
             onBlur={handleEditSave}
             onKeyDown={handleKeyDown}
+            onFocus={(e) => e.stopPropagation()}
             className="h-6 px-1 text-sm font-medium"
           />
         </div>
@@ -90,28 +91,34 @@ const CollectionMenuButton = ({
 
   return (
     <SidebarMenuButton
-      className="w-full justify-between hover:bg-primary/30"
+      className="w-full justify-between hover:bg-primary/30 cursor-pointer"
       onMouseOver={() => setShowMenu(true)}
       onMouseOut={() => setShowMenu(false)}
       onClick={() => toggleCollection(collection.id.toString())}
     >
-      <div className="flex items-center gap-2 flex-1">
-        <Folder size={16} />
-        <span className="font-medium">{collection.name}</span>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+          <Folder size={16} />
+        </div>{' '}
+        <span className="font-medium line-clamp-1 transition-all ease-in-out">{collection.name}</span>
       </div>
       <div className="flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {showMenu && (
-              <button 
-                className="transition-all ease-linear duration-200 p-1 hover:bg-primary/20 rounded" 
+              <button
+                className="transition-all ease-linear duration-200 p-1 hover:bg-primary/20 rounded"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal size={14} />
               </button>
             )}
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+          <DropdownMenuContent
+            align="end"
+            onCloseAutoFocus={(e) => e.preventDefault()}
+            className="transition-all ease-linear duration-200"
+          >
             <DropdownMenuItem onClick={() => setIsEditing(true)}>Edit</DropdownMenuItem>
             <AlertDialog>
               <AlertDialogTrigger asChild>
