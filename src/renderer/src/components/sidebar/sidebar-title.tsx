@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { ChevronsUpDown, FolderPlus, Plus } from 'lucide-react'
+import { ChevronsUpDown, Plus } from 'lucide-react'
 import { useCreateCollection, validateCollectionName } from '@/lib/collections-store'
 import { CollectionNameInput } from '../CollectionNameInput'
 
@@ -21,6 +21,7 @@ export function SidebarTitle() {
   const handleNewCollection = () => {
     setShowCollectionInput(true)
   }
+  
 
   const handleSaveCollection = async (name: string) => {
     if (validateCollectionName(name)) {
@@ -91,24 +92,7 @@ export function SidebarTitle() {
         />
       )}
     </div>
-    <div className='flex justify-around'>
-      <Button
-        variant="ghost"
-        size="sm"
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="ghost"
-        size="sm">
-          <FolderPlus className="h-4 w-4" />
-        </Button>
-        <Button 
-        variant="ghost"
-        size="sm">
-          <ChevronsUpDown className="h-4 w-4" />
-        </Button>
-    </div>
+    
       </div>
   )
 }

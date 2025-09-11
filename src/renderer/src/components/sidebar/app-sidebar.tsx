@@ -16,29 +16,25 @@ import { SidebarTitle } from './sidebar-title'
 import { ChevronDown, Folder, History, Settings, Plus, Server } from 'lucide-react'
 import { useCollections } from '@/lib/collections-store'
 import { useLocation } from 'react-router'
+import SidebarActions from './sidebar-actions'
+import useSidebarStore from '@/lib/store/sidebar-store'
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const { data: collections = [] } = useCollections()
-  const [openCollections, setOpenCollections] = React.useState<Set<string>>(new Set())
 
-  const toggleCollection = (collectionId: string) => {
-    setOpenCollections((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(collectionId)) {
-        newSet.delete(collectionId)
-      } else {
-        newSet.add(collectionId)
-      }
-      return newSet
-    })
-  }
+  const toggleCollection = useSidebarStore((state) => state.toggleCollection)
+
+  const openCollections = useSidebarStore((state) => state.openCollections)
+
+  const safeOpenCollections = Array.isArray(openCollections) ? openCollections : []
 
   return (
     <Sidebar {...props} className="flex flex-col">
-      <SidebarHeader className="border-b">
+      <SidebarHeader className="border-b-2">
         <SidebarTitle />
       </SidebarHeader>
+      <SidebarActions />
       <SidebarContent className="flex-1 min-h-0">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -50,7 +46,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               ) : (
                 collections.map((collection) => {
                   const collectionId = collection.id.toString()
-                  const isOpen = openCollections.has(collectionId)
+                  const isOpen = safeOpenCollections.includes(collectionId)
                   return (
                     <Collapsible
                       key={collectionId}
@@ -71,7 +67,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="ml-4 space-y-1">
-                          {/* Placeholder for requests - will be populated when requests are implemented */}
                           <SidebarMenuItem>
                             <SidebarMenuButton className="hover:bg-primary/30 text-muted-foreground">
                               <span className="text-sm">No requests yet</span>
