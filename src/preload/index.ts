@@ -8,6 +8,10 @@ const api = {
   closeWindow: () => ipcRenderer.invoke('close-window'),
   getCollections: () => ipcRenderer.invoke('db:get-collections'),
   addCollection: (data: { name: string }) => ipcRenderer.invoke('db:add-collection', data),
+  updateCollection: (data: { id: number; name?: string }) =>
+    ipcRenderer.invoke('db:update-collection', data),
+  deleteCollection: (collectionId: number) =>
+    ipcRenderer.invoke('db:delete-collection', collectionId),
   getRequests: (collectionId: number) => ipcRenderer.invoke('db:get-requests', collectionId),
   addRequest: (data: any) => ipcRenderer.invoke('db:add-request', data),
   updateRequest: (data: any) => ipcRenderer.invoke('db:update-request', data),

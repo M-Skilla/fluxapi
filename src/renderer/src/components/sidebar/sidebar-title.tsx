@@ -1,5 +1,4 @@
 'use client'
-import { useState } from 'react'
 import Logo from '@/assets/logo.png'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,36 +10,19 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { ChevronsUpDown, Plus } from 'lucide-react'
-import { useCreateCollection, validateCollectionName } from '@/lib/collections-store'
-import { CollectionNameInput } from '../CollectionNameInput'
+import { useSidebarStore } from '@/lib/store/sidebar-store'
 
 export function SidebarTitle() {
-  const [showCollectionInput, setShowCollectionInput] = useState(false)
-  const createCollectionMutation = useCreateCollection()
+ const setShowCollectionInput = useSidebarStore(state => state.setShowCollectionInput)
+
 
   const handleNewCollection = () => {
     setShowCollectionInput(true)
   }
   
 
-  const handleSaveCollection = async (name: string) => {
-    if (validateCollectionName(name)) {
-      try {
-        await createCollectionMutation.mutateAsync({ name })
-        setShowCollectionInput(false)
-      } catch (error) {
-        console.error('Failed to create collection:', error)
-        // You could show a toast notification here
-      }
-    }
-  }
-
-  const handleCancelCollection = () => {
-    setShowCollectionInput(false)
-  }
-
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col text-neutral-300'>
       
     <div className="flex flex-col w-full gap-2">
       <div className="flex items-center justify-between w-full">
@@ -75,7 +57,7 @@ export function SidebarTitle() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Add New</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleNewCollection}>New Collection</DropdownMenuItem>
+            <DropdownMenuItem onClick={(handleNewCollection)}>New Collection</DropdownMenuItem>
             <DropdownMenuItem>New Request</DropdownMenuItem>
             <DropdownMenuItem>New Environment</DropdownMenuItem>
             <DropdownMenuItem>Import Collection</DropdownMenuItem>
@@ -84,13 +66,7 @@ export function SidebarTitle() {
         </DropdownMenu>
       </div>
 
-      {showCollectionInput && (
-        <CollectionNameInput
-        onSave={handleSaveCollection}
-        onCancel={handleCancelCollection}
-        placeholder="Enter collection name..."
-        />
-      )}
+      
     </div>
     
       </div>

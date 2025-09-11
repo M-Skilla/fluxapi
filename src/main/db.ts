@@ -84,6 +84,38 @@ export function collectionDao(ipcMain: Electron.IpcMain, db: Database.Database) 
     const collections = stmt.all()
     return collections as Array<{ id: number; name: string; created_at: string }>
   })
+
+  ipcMain.handle(
+    'db:update-collection',
+    (
+      _event,
+      request: {
+        id: number
+        name?: string
+      }
+    ) => {
+      const updates: string[] = []
+      const values: any[] = []
+
+      if (request.name !== undefined) {
+        updates.push('name = ?')
+        values.push(request.name)
+      }
+
+      if (updates.length === 0) return { changes: 0 }
+
+      const stmt = db.prepare(`UPDATE collections SET ${updates.join(', ')} WHERE id = ?`)
+      values.push(request.id)
+      const info = stmt.run(...values)
+      return { changes: info.changes }
+    }
+  )
+
+  ipcMain.handle('db:delete-collection', (_event, collectionId: number) => {
+    const stmt = db.prepare('DELETE FROM collections WHERE id = ?')
+    const info = stmt.run(collectionId)
+    return { changes: info.changes }
+  })
 }
 
 export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {

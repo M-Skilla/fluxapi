@@ -5,7 +5,7 @@ import TabsBar from '../TabsBar'
 
 export default function Sidebar() {
   return (
-    <SidebarProvider>
+    <SidebarProvider className='text-neutral-500'>
       <AppSidebar className="border-r border-r-neutral-700" />
       <SidebarInset>
         <header className="flex shrink-0 items-center gap-2 px-4">

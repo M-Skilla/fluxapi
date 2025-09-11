@@ -13,24 +13,50 @@ import {
 } from '@/components/ui/sidebar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarTitle } from './sidebar-title'
-import { ChevronDown, Folder, History, Settings, Plus, Server } from 'lucide-react'
-import { useCollections } from '@/lib/collections-store'
+import { History, Settings, Plus, Server } from 'lucide-react'
+import {
+  useCollections,
+  useCreateCollection,
+  validateCollectionName
+} from '@/lib/collections-store'
 import { useLocation } from 'react-router'
 import SidebarActions from './sidebar-actions'
 import useSidebarStore from '@/lib/store/sidebar-store'
+import { CollectionNameInput } from '../CollectionNameInput'
+import CollectionMenuButton from './collection-menu-button'
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const { data: collections = [] } = useCollections()
+  const createCollectionMutation = useCreateCollection()
 
   const toggleCollection = useSidebarStore((state) => state.toggleCollection)
 
   const openCollections = useSidebarStore((state) => state.openCollections)
 
+  
+  const showCollectionInput = useSidebarStore((state) => state.showCollectionInput)
+  const setShowCollectionInput = useSidebarStore((state) => state.setShowCollectionInput)
+  
+  
   const safeOpenCollections = Array.isArray(openCollections) ? openCollections : []
+  const handleSaveCollection = async (name: string) => {
+    if (validateCollectionName(name)) {
+      try {
+        await createCollectionMutation.mutateAsync({ name })
+        setShowCollectionInput(false)
+      } catch (error) {
+        console.error('Failed to create collection:', error)
+      }
+    }
+  }
+
+  const handleCancelCollection = () => {
+    setShowCollectionInput(false)
+  }
 
   return (
-    <Sidebar {...props} className="flex flex-col">
+    <Sidebar {...props} className="flex flex-col text-neutral-400">
       <SidebarHeader className="border-b-2">
         <SidebarTitle />
       </SidebarHeader>
@@ -55,16 +81,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className="w-full justify-between hover:bg-primary/30">
-                            <div className="flex items-center gap-2">
-                              <Folder size={16} />
-                              <span className="font-medium">{collection.name}</span>
-                            </div>
-                            <ChevronDown
-                              size={16}
-                              className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                            />
-                          </SidebarMenuButton>
+                          <CollectionMenuButton collection={collection} isOpen={isOpen} toggleCollection={toggleCollection} />
                         </CollapsibleTrigger>
                         <CollapsibleContent className="ml-4 space-y-1">
                           <SidebarMenuItem>
@@ -84,6 +101,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     </Collapsible>
                   )
                 })
+              )}
+              {showCollectionInput && (
+                <CollectionNameInput
+                  onSave={handleSaveCollection}
+                  onCancel={handleCancelCollection}
+                  placeholder="Enter collection name..."
+                />
               )}
             </SidebarMenu>
           </SidebarGroupContent>
