@@ -9,6 +9,7 @@ import { UpdateRequestRequest, useUpdateRequest } from '@/lib'
 import { useRequest } from '@/lib/requests-store'
 import ParamsSection from './params-section'
 import HeadersSection from './headers-section'
+import AuthSection from './auth-section'
 
 // Simple debounce utility
 const debounce = (func: Function, wait: number) => {
@@ -33,6 +34,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     url: content.url || '',
     headers: content.headers || {},
     queryParams: content.queryParams || {},
+    auth: content.auth || {},
     body: content.body || ''
   })
 
@@ -47,6 +49,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         url: dbRequest.url,
         headers: dbRequest.headers ? JSON.parse(dbRequest.headers) : {},
         queryParams: dbRequest.queryParams ? JSON.parse(dbRequest.queryParams) : {},
+        auth: dbRequest.auth ? JSON.parse(dbRequest.auth) : {},
         body: dbRequest.body || ''
       })
       hasInitialized.current = true
@@ -105,7 +108,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
       </div>
       <div className="flex h-full">
         <div className="flex flex-col w-1/2 border-r">
-          <Tabs defaultValue="params" className="">
+          <Tabs defaultValue="params" className="h-full">
             <TabsList>
               <TabsTrigger value="params">Params</TabsTrigger>
               <TabsTrigger value="headers">Headers</TabsTrigger>
@@ -134,14 +137,12 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               />
             </TabsContent>
             <TabsContent value="auth">
-              <div className="flex flex-col p-4 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-md font-medium">Auth</h2>
-                  <Button size="sm" variant="outline">
-                    Add Auth
-                  </Button>
-                </div>
-              </div>
+              <AuthSection
+                auth={requestObj.auth || {}}
+                onSaveToDatabase={(updates) =>
+                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                }
+              />
             </TabsContent>
             <TabsContent value="body">
               <div className="flex flex-col p-4 h-full">

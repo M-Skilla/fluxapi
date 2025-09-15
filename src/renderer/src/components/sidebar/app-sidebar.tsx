@@ -41,7 +41,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const setShowCollectionInput = useSidebarStore((state) => state.setShowCollectionInput)
 
   const { tabs, setActiveTab, addTab } = useTabsStore()
-  const createRequestMutation = useCreateRequest()
 
   const safeOpenCollections = Array.isArray(openCollections) ? openCollections : []
   const handleSaveCollection = async (name: string) => {
@@ -189,7 +188,8 @@ const CollectionRequests: React.FC<CollectionRequestsProps> = ({
         name: 'Untitled',
         method: 'GET',
         url: '',
-        headers: {}
+        headers: {},
+        auth: { type: 'no-auth' }
       })
 
       // Create tab for the new request
@@ -202,6 +202,7 @@ const CollectionRequests: React.FC<CollectionRequestsProps> = ({
           method: 'GET',
           url: '',
           headers: {},
+          auth: { type: 'no-auth' },
           queryParams: {},
           body: null
         }

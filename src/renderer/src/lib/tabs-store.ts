@@ -53,6 +53,7 @@ export const useTabsStore = create<TabsState>()(
             url: '',
             queryParams: JSON.stringify({}),
             headers: JSON.stringify({}),
+            auth: JSON.stringify({ type: 'no-auth' }),
             body: null
           })
 
@@ -67,6 +68,7 @@ export const useTabsStore = create<TabsState>()(
               url: '',
               headers: {},
               queryParams: {},
+              auth: { type: 'no-auth' },
               collectionId: collectionId
             },
             isDirty: false,

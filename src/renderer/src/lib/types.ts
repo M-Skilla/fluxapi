@@ -14,6 +14,7 @@ export interface RequestTabContent {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
   url: string
   headers: Record<string, string>
+  auth?: Record<string, any>
   body?: string
   queryParams: Record<string, string>
 }

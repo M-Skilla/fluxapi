@@ -17,7 +17,8 @@ export const TabsBar: React.FC = () => {
         name: 'Untitled',
         method: 'GET',
         url: '',
-        headers: {}
+        headers: {},
+        auth: { type: 'no-auth' }
       })
 
       // Create tab for the new request
@@ -30,6 +31,7 @@ export const TabsBar: React.FC = () => {
           method: 'GET',
           url: '',
           headers: {},
+          auth: { type: 'no-auth' },
           queryParams: {},
           body: null
         }

@@ -10,6 +10,7 @@ export interface Request {
   url: string
   queryParams: string | null
   headers: string | null
+  auth: string | null
   body: string | null
   created_at: string
 }
@@ -21,6 +22,7 @@ export interface CreateRequestRequest {
   url: string
   headers?: Record<string, string>
   queryParams?: Record<string, string>
+  auth?: Record<string, any>
   body?: string
 }
 
@@ -31,6 +33,7 @@ export interface UpdateRequestRequest {
   url?: string
   headers?: Record<string, string>
   queryParams?: Record<string, string>
+  auth?: Record<string, any>
   body?: string
 }
 
@@ -44,21 +47,23 @@ const getRequest = async (requestId: number): Promise<Request | undefined> => {
 }
 
 const createRequest = async (data: CreateRequestRequest): Promise<{ id: number }> => {
-  // Convert headers object to JSON string if provided
+  // Convert objects to JSON strings if provided
   const requestData = {
     ...data,
     queryParams: data.queryParams ? JSON.stringify(data.queryParams) : '{}',
-    headers: data.headers ? JSON.stringify(data.headers) : null
+    headers: data.headers ? JSON.stringify(data.headers) : null,
+    auth: data.auth ? JSON.stringify(data.auth) : null
   }
   return await window.api.addRequest(requestData)
 }
 
 const updateRequest = async (data: UpdateRequestRequest): Promise<{ changes: number }> => {
-  // Convert headers object to JSON string if provided
+  // Convert objects to JSON strings if provided
   const requestData = {
     ...data,
     queryParams: data.queryParams ? JSON.stringify(data.queryParams) : '{}',
-    headers: data.headers ? JSON.stringify(data.headers) : null
+    headers: data.headers ? JSON.stringify(data.headers) : null,
+    auth: data.auth ? JSON.stringify(data.auth) : null
   }
   return await window.api.updateRequest(requestData)
 }

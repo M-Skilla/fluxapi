@@ -21,6 +21,7 @@ export async function initSchema(db: Database.Database) {
       url TEXT NOT NULL,
       queryParams TEXT NOT NULL, -- store JSON string
       headers TEXT,      -- store JSON string
+      auth TEXT,         -- store JSON string for auth data
       body TEXT,         -- store JSON string or raw
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(collection_id) REFERENCES collections(id) ON DELETE CASCADE
@@ -136,11 +137,12 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
         url: string
         queryParams?: string
         headers?: string
+        auth?: string
         body?: string
       }
     ) => {
       const stmt = db.prepare(
-        'INSERT INTO requests (collection_id, name, method, url, queryParams, headers, body) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO requests (collection_id, name, method, url, queryParams, headers, auth, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       )
       const info = stmt.run(
         request.collection_id,
@@ -149,6 +151,7 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
         request.url,
         request.queryParams || JSON.stringify({}),
         request.headers || null,
+        request.auth || null,
         request.body || null
       )
       return { id: info.lastInsertRowid }
@@ -166,6 +169,7 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
       url: string
       queryParams: string | null
       headers: string | null
+      auth: string | null
       body: string | null
       created_at: string
     }>
@@ -183,6 +187,7 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
           url: string
           queryParams: string | null
           headers: string | null
+          auth: string | null
           body: string | null
           created_at: string
         }
@@ -200,6 +205,7 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
         url?: string
         queryParams?: string
         headers?: string
+        auth?: string
         body?: string
       }
     ) => {
@@ -225,6 +231,10 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
       if (request.headers !== undefined) {
         updates.push('headers = ?')
         values.push(request.headers)
+      }
+      if (request.auth !== undefined) {
+        updates.push('auth = ?')
+        values.push(request.auth)
       }
       if (request.body !== undefined) {
         updates.push('body = ?')

@@ -21,6 +21,7 @@ const api = {
     url: string
     queryParams?: string
     headers?: string
+    auth?: string
     body?: string
   }) => ipcRenderer.invoke('db:add-request', data),
   updateRequest: (data: {
@@ -30,6 +31,7 @@ const api = {
     url?: string
     queryParams?: string
     headers?: string
+    auth?: string
     body?: string
   }) => ipcRenderer.invoke('db:update-request', data),
   deleteRequest: (requestId: number) => ipcRenderer.invoke('db:delete-request', requestId)
