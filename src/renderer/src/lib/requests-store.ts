@@ -148,20 +148,20 @@ export const stringifyRequestHeaders = (headers: Record<string, string>): string
 export const getMethodColor = (method: string): string => {
   switch (method.toUpperCase()) {
     case 'GET':
-      return 'bg-green-500'
+      return 'text-green-500'
     case 'POST':
-      return 'bg-blue-500'
+      return 'text-blue-500'
     case 'PUT':
-      return 'bg-orange-500'
+      return 'text-orange-500'
     case 'DELETE':
-      return 'bg-red-500'
+      return 'text-red-500'
     case 'PATCH':
-      return 'bg-purple-500'
+      return 'text-purple-500'
     case 'HEAD':
-      return 'bg-gray-500'
+      return 'text-gray-500'
     case 'OPTIONS':
-      return 'bg-yellow-500'
+      return 'text-yellow-500'
     default:
-      return 'bg-gray-500'
+      return 'text-gray-500'
   }
 }

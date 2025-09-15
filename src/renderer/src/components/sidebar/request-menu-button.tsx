@@ -114,11 +114,8 @@ const RequestMenuButton = ({ request, onClick }: RequestMenuButtonProps) => {
       onClick={onClick}
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
-          <FileText size={16} />
-        </div>
         <div
-          className={`px-1 py-0.5 rounded text-xs font-medium text-white ${getMethodColor(request.method)}`}
+          className={`px-1 py-0.5 rounded text-xs font-medium  ${getMethodColor(request.method)}`}
         >
           {request.method}
         </div>
