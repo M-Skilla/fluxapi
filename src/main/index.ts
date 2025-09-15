@@ -41,6 +41,25 @@ function createWindow(): void {
   }
 }
 
+function cleanupDatabase() {
+  if (db) {
+    try {
+      // Drop all tables in reverse order due to foreign key constraints
+      const tables = ['history', 'variables', 'environments', 'requests', 'collections']
+
+      for (const table of tables) {
+        db.prepare(`DROP TABLE IF EXISTS ${table}`).run()
+      }
+
+      console.log('Database tables cleaned up successfully')
+    } catch (error) {
+      console.error('Error cleaning up database:', error)
+    } finally {
+      db.close()
+    }
+  }
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -100,9 +119,15 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  // cleanupDatabase()
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+// Clean up database when app is about to quit (for macOS)
+app.on('before-quit', () => {
+  // cleanupDatabase()
 })
 
 // In this file you can include the rest of your app's specific main process

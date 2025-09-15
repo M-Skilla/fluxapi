@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTabsStore } from './tabs-store'
 
 // Types
 export interface Request {
@@ -7,6 +8,7 @@ export interface Request {
   name: string | null
   method: string
   url: string
+  queryParams: string | null
   headers: string | null
   body: string | null
   created_at: string
@@ -86,10 +88,21 @@ export const useCreateRequest = () => {
 
 export const useUpdateRequest = () => {
   const queryClient = useQueryClient()
+  const { tabs, updateTab } = useTabsStore()
 
   return useMutation({
     mutationFn: updateRequest,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Update the corresponding tab title if the request name was changed
+      if (variables.name) {
+        const requestTab = tabs.find(
+          (tab) => tab.type === 'request' && (tab.content as any)?.id === variables.id
+        )
+        if (requestTab) {
+          updateTab(requestTab.id, { title: variables.name })
+        }
+      }
+
       // Invalidate all requests queries since we don't know the collection_id
       queryClient.invalidateQueries({ queryKey: ['requests'] })
     },

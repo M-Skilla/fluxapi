@@ -2,32 +2,52 @@ import React from 'react'
 import { useTabsStore } from '@/lib/tabs-store'
 import { Button } from '@/components/ui/button'
 import { X, Plus } from 'lucide-react'
+import { SidebarTrigger } from './ui/sidebar'
+import { useCreateRequest } from '@/lib/requests-store'
 
 export const TabsBar: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, closeTab, addTab } = useTabsStore()
+  const createRequestMutation = useCreateRequest()
 
-  const handleAddTab = () => {
-    addTab({
-      title: 'New Request',
-      type: 'request',
-      content: {
+  const handleAddTab = async () => {
+    try {
+      // Create request without collection (null) for standalone tabs
+      const result = await createRequestMutation.mutateAsync({
+        collection_id: 1,
+        name: 'Untitled',
         method: 'GET',
         url: '',
-        headers: {},
-        queryParams: {}
-      }
-    })
+        headers: {}
+      })
+
+      // Create tab for the new request
+      addTab({
+        title: 'Untitled',
+        type: 'request',
+        content: {
+          id: result.id,
+          collectionId: 1,
+          method: 'GET',
+          url: '',
+          headers: {},
+          queryParams: {},
+          body: null
+        }
+      })
+    } catch (error) {
+      console.error('Failed to create request:', error)
+    }
   }
 
   return (
-    <div className="flex items-center bg-background border-b px-2 py-1 gap-1">
+    <div className="flex items-center bg-sidebar border-b pt-4 px-2 gap-1">
+      <SidebarTrigger className="-ml-1 mt-1" />
+
       {tabs.map((tab) => (
         <div
           key={tab.id}
-          className={`flex items-center gap-2 px-3 py-2 rounded-t-md border cursor-pointer transition-colors ${
-            activeTabId === tab.id
-              ? 'bg-card border-border'
-              : 'bg-muted/50 border-transparent hover:bg-muted'
+          className={`flex items-center justify-between w-[130px] px-2 py-2 rounded-none cursor-pointer transition-colors  ${
+            activeTabId === tab.id ? 'border-b-primary border-b-2' : ''
           }`}
           onClick={() => setActiveTab(tab.id)}
         >

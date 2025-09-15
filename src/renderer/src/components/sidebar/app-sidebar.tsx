@@ -24,6 +24,9 @@ import SidebarActions from './sidebar-actions'
 import useSidebarStore from '@/lib/store/sidebar-store'
 import { CollectionNameInput } from '../CollectionNameInput'
 import CollectionMenuButton from './collection-menu-button'
+import { useTabsStore } from '@/lib/tabs-store'
+import { useRequests, useCreateRequest } from '@/lib/requests-store'
+import RequestMenuButton from './request-menu-button'
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
@@ -34,11 +37,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   const openCollections = useSidebarStore((state) => state.openCollections)
 
-  
   const showCollectionInput = useSidebarStore((state) => state.showCollectionInput)
   const setShowCollectionInput = useSidebarStore((state) => state.setShowCollectionInput)
-  
-  
+
+  const { tabs, setActiveTab, addTab } = useTabsStore()
+  const createRequestMutation = useCreateRequest()
+
   const safeOpenCollections = Array.isArray(openCollections) ? openCollections : []
   const handleSaveCollection = async (name: string) => {
     if (validateCollectionName(name)) {
@@ -81,21 +85,44 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <CollectionMenuButton collection={collection} isOpen={isOpen} toggleCollection={toggleCollection} />
+                          <CollectionMenuButton
+                            collection={collection}
+                            isOpen={isOpen}
+                            toggleCollection={toggleCollection}
+                          />
                         </CollapsibleTrigger>
                         <CollapsibleContent className="ml-4 space-y-1">
-                          <SidebarMenuItem>
-                            <SidebarMenuButton className="hover:bg-primary/30 text-muted-foreground">
-                              <span className="text-sm">No requests yet</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                          {/* Add new request button */}
-                          <SidebarMenuItem>
-                            <SidebarMenuButton className="hover:bg-primary/30 text-muted-foreground">
-                              <Plus size={14} />
-                              <span className="text-sm">Add Request</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
+                          <CollectionRequests
+                            collectionId={collection.id}
+                            onRequestClick={(request) => {
+                              // Find existing tab for this request or create new one
+                              const existingTab = tabs.find(
+                                (tab) =>
+                                  tab.type === 'request' && (tab.content as any)?.id === request.id
+                              )
+
+                              if (existingTab) {
+                                setActiveTab(existingTab.id)
+                              } else {
+                                // Create new tab with existing request data
+                                addTab({
+                                  title: request.name || 'Untitled',
+                                  type: 'request',
+                                  content: {
+                                    id: request.id,
+                                    collectionId: request.collection_id,
+                                    method: request.method,
+                                    url: request.url,
+                                    headers: request.headers ? JSON.parse(request.headers) : {},
+                                    queryParams: request.queryParams
+                                      ? JSON.parse(request.queryParams)
+                                      : {},
+                                    body: request.body
+                                  }
+                                })
+                              }
+                            }}
+                          />
                         </CollapsibleContent>
                       </SidebarMenuItem>
                     </Collapsible>
@@ -139,5 +166,86 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+  )
+}
+
+interface CollectionRequestsProps {
+  collectionId: number
+  onRequestClick: (request: any) => void
+}
+
+const CollectionRequests: React.FC<CollectionRequestsProps> = ({
+  collectionId,
+  onRequestClick
+}) => {
+  const { data: requests = [], isLoading } = useRequests(collectionId)
+  const createRequestMutation = useCreateRequest()
+  const { addTab } = useTabsStore()
+
+  const handleAddRequest = async () => {
+    try {
+      const result = await createRequestMutation.mutateAsync({
+        collection_id: collectionId,
+        name: 'Untitled',
+        method: 'GET',
+        url: '',
+        headers: {}
+      })
+
+      // Create tab for the new request
+      addTab({
+        title: 'Untitled',
+        type: 'request',
+        content: {
+          id: result.id,
+          collectionId: collectionId,
+          method: 'GET',
+          url: '',
+          headers: {},
+          queryParams: {},
+          body: null
+        }
+      })
+    } catch (error) {
+      console.error('Failed to create request:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton disabled>
+          <span className="text-sm">Loading requests...</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  }
+
+  return (
+    <>
+      {requests.length === 0 ? (
+        <SidebarMenuItem>
+          <SidebarMenuButton className="hover:bg-primary/30 text-muted-foreground">
+            <span className="text-sm">No requests yet</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ) : (
+        requests.map((request) => (
+          <SidebarMenuItem key={request.id}>
+            <RequestMenuButton request={request} onClick={() => onRequestClick(request)} />
+          </SidebarMenuItem>
+        ))
+      )}
+      {/* Add new request button */}
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          className="hover:bg-primary/30 text-muted-foreground"
+          onClick={handleAddRequest}
+        >
+          <Plus size={14} />
+          <span className="text-sm">Add Request</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </>
   )
 }

@@ -9,6 +9,8 @@ export interface Tab {
 }
 
 export interface RequestTabContent {
+  id?: number // Database ID
+  collectionId?: number // Parent collection ID
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
   url: string
   headers: Record<string, string>

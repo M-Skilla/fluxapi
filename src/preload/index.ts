@@ -13,8 +13,24 @@ const api = {
   deleteCollection: (collectionId: number) =>
     ipcRenderer.invoke('db:delete-collection', collectionId),
   getRequests: (collectionId: number) => ipcRenderer.invoke('db:get-requests', collectionId),
-  addRequest: (data: any) => ipcRenderer.invoke('db:add-request', data),
-  updateRequest: (data: any) => ipcRenderer.invoke('db:update-request', data),
+  addRequest: (data: {
+    collection_id: number | null
+    name: string
+    method: string
+    url: string
+    queryParams?: string
+    headers?: string
+    body?: string
+  }) => ipcRenderer.invoke('db:add-request', data),
+  updateRequest: (data: {
+    id: number
+    name?: string
+    method?: string
+    url?: string
+    queryParams?: string
+    headers?: string
+    body?: string
+  }) => ipcRenderer.invoke('db:update-request', data),
   deleteRequest: (requestId: number) => ipcRenderer.invoke('db:delete-request', requestId)
 }
 

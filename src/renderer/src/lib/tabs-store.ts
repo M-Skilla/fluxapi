@@ -7,7 +7,8 @@ interface TabsState {
   activeTabId: string | null
 
   // Actions
-  addTab: (tab: Omit<Tab, 'id'>) => void
+  addTab: (tab: Omit<Tab, 'id'>) => Promise<void>
+  addRequestTab: (collectionId?: number) => Promise<void>
   removeTab: (tabId: string) => void
   updateTab: (tabId: string, updates: Partial<Tab>) => void
   setActiveTab: (tabId: string) => void
@@ -29,7 +30,7 @@ export const useTabsStore = create<TabsState>()(
       tabs: [],
       activeTabId: null,
 
-      addTab: (tabData) => {
+      addTab: async (tabData) => {
         const newTab: Tab = {
           id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           ...tabData,
@@ -40,6 +41,45 @@ export const useTabsStore = create<TabsState>()(
           tabs: [...state.tabs, newTab],
           activeTabId: newTab.id
         }))
+      },
+
+      addRequestTab: async (collectionId) => {
+        try {
+          // Create database record first
+          const dbResult = await window.api.addRequest({
+            collection_id: collectionId || null,
+            name: 'Untitled',
+            method: 'GET',
+            url: '',
+            queryParams: JSON.stringify({}),
+            headers: JSON.stringify({}),
+            body: null
+          })
+
+          // Create tab with database ID reference
+          const newTab: Tab = {
+            id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title: 'Untitled',
+            type: 'request',
+            content: {
+              id: dbResult.id,
+              method: 'GET',
+              url: '',
+              headers: {},
+              queryParams: {},
+              collectionId: collectionId
+            },
+            isDirty: false,
+            lastModified: new Date()
+          }
+
+          set((state) => ({
+            tabs: [...state.tabs, newTab],
+            activeTabId: newTab.id
+          }))
+        } catch (error) {
+          console.error('Failed to create request tab:', error)
+        }
       },
 
       removeTab: (tabId) => {
