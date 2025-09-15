@@ -13,6 +13,7 @@ const api = {
   deleteCollection: (collectionId: number) =>
     ipcRenderer.invoke('db:delete-collection', collectionId),
   getRequests: (collectionId: number) => ipcRenderer.invoke('db:get-requests', collectionId),
+  getRequest: (requestId: number) => ipcRenderer.invoke('db:get-request', requestId),
   addRequest: (data: {
     collection_id: number | null
     name: string

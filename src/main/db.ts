@@ -171,6 +171,24 @@ export function requestDao(ipcMain: Electron.IpcMain, db: Database.Database) {
     }>
   })
 
+  ipcMain.handle('db:get-request', (_event, requestId: number) => {
+    const stmt = db.prepare('SELECT * FROM requests WHERE id = ?')
+    const request = stmt.get(requestId)
+    return request as
+      | {
+          id: number
+          collection_id: number
+          name: string
+          method: string
+          url: string
+          queryParams: string | null
+          headers: string | null
+          body: string | null
+          created_at: string
+        }
+      | undefined
+  })
+
   ipcMain.handle(
     'db:update-request',
     (

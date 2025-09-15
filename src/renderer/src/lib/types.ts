@@ -16,10 +16,6 @@ export interface RequestTabContent {
   headers: Record<string, string>
   body?: string
   queryParams: Record<string, string>
-  auth?: {
-    type: 'none' | 'basic' | 'bearer' | 'api-key'
-    data: Record<string, string>
-  }
 }
 
 export interface CollectionTabContent {

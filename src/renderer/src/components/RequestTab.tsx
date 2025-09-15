@@ -3,35 +3,78 @@ import { RequestTabContent } from '@/lib/types'
 import RequestSelect from './request-select'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { Plus, Send, Trash } from 'lucide-react'
+import { Send } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { UpdateRequestRequest, useUpdateRequest } from '@/lib'
+import { useRequest } from '@/lib/requests-store'
+import ParamsSection from './params-section'
+import HeadersSection from './headers-section'
+
+// Simple debounce utility
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout
+  return (...args: any[]) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func.apply(null, args), wait)
+  }
+}
 
 interface RequestTabProps {
   content: RequestTabContent
 }
 
 const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [params, setParams] = React.useState([{ key: '', value: '' }])
-  const [requestObj, setRequestObj] = React.useState({
-    method: 'GET',
-    url: '',
-    headers: {},
-    queryParams: params,
-    body: '',
-    auth: {
-      type: 'none',
-      data: {}
-    }
+  // Fetch fresh data from database on mount
+  const { data: dbRequest, isLoading: isDbLoading } = useRequest(content.id!)
+
+  const [requestObj, setRequestObj] = React.useState<UpdateRequestRequest>({
+    id: content.id!,
+    method: content.method || 'GET',
+    url: content.url || '',
+    headers: content.headers || {},
+    queryParams: content.queryParams || {},
+    body: content.body || ''
   })
 
-  
+  const hasInitialized = React.useRef(false)
+
+  // Update local state only when database data is first loaded (on mount)
+  React.useEffect(() => {
+    if (!hasInitialized.current && dbRequest && !isDbLoading) {
+      setRequestObj({
+        id: dbRequest.id,
+        method: dbRequest.method,
+        url: dbRequest.url,
+        headers: dbRequest.headers ? JSON.parse(dbRequest.headers) : {},
+        queryParams: dbRequest.queryParams ? JSON.parse(dbRequest.queryParams) : {},
+        body: dbRequest.body || ''
+      })
+      hasInitialized.current = true
+    }
+  }, [dbRequest, isDbLoading])
+
+  const updateRequest = useUpdateRequest()
+
+  const updateRequestDebounced = React.useCallback(
+    (updates: Partial<UpdateRequestRequest>) => {
+      if (content.id) {
+        debounce(() => {
+          updateRequest.mutateAsync({ ...requestObj, ...updates })
+        }, 300)()
+      }
+    },
+    [content.id, requestObj, updateRequest]
+  )
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value
+    setRequestObj((prev) => ({ ...prev, url: newUrl }))
+    updateRequestDebounced({ url: newUrl })
+  }
 
   const sendRequest = () => {
-    setIsLoading(true)
     setTimeout(() => {
       console.log('Sending request...')
-      setIsLoading(false)
     }, 2000)
   }
 
@@ -39,13 +82,20 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     <div className="flex flex-col h-full ">
       <div className="flex gap-3 items-center py-2 px-4 border-b bg-sidebar">
         <RequestSelect
-          method={requestObj.method}
-          setMethod={(method) => setRequestObj((prev) => ({ ...prev, method }))}
+          method={requestObj.method!}
+          setMethod={(method) => {
+            setRequestObj((prev) => ({ ...prev, method }))
+            if (content.id) {
+              debounce(() => {
+                updateRequest.mutateAsync({ ...requestObj, method })
+              }, 300)()
+            }
+          }}
         />
         <Input
           value={requestObj.url}
-          onChange={(e) => setRequestObj((prev) => ({ ...prev, url: e.target.value }))}
-          className="flex-1"
+          onChange={(e) => handleUrlChange(e)}
+          className="flex-1 text-neutral-200"
           placeholder="https://jsonplaceholder.typicode.com/posts"
         />
         <Button onClick={sendRequest} className="text-neutral-200" size="sm">
@@ -64,73 +114,24 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               <TabsTrigger value="exports">Exports</TabsTrigger>
             </TabsList>
             <TabsContent value="params">
-              <div className="flex flex-col px-4 py-2 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-md font-medium">Query Parameters</h2>
-                  <Button size="sm" variant="ghost" className="text-primary">
-                    <Plus className="h-4 w-4" />
-                    <span>Add Params</span>
-                  </Button>
-                </div>
-                <div className="flex flex-col gap-2 mt-2">
-                  {params.map((param, index) => (
-                    <>
-                      <div key={index} className="flex gap-2 items-center">
-                        <Input
-                          placeholder="Key"
-                          value={param.key}
-                          onChange={(e) => {
-                            const newParams = [...params]
-                            newParams[index].key = e.target.value
-                            setParams(newParams)
-                          }}
-                        />
-                        <Input
-                          placeholder="Value"
-                          value={param.value}
-                          onChange={(e) => {
-                            const newParams = [...params]
-                            newParams[index].value = e.target.value
-                            setParams(newParams)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Tab' && index === params.length - 1) {
-                              setParams([...params, { key: '', value: '' }])
-                            }
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setParams(params.filter((_, i) => i !== index))}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {index === params.length - 1 && (
-                        <Button
-                          size="sm"
-                          className="bg-transparent border border-primary hover:bg-input/30 cursor-pointer text-primary"
-                          onClick={() => setParams([...params, { key: '', value: '' }])}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </>
-                  ))}
-                </div>
-              </div>
+              <ParamsSection
+                queryParams={requestObj.queryParams || {}}
+                onParamsChange={(params) =>
+                  setRequestObj((prev) => ({ ...prev, queryParams: params }))
+                }
+                onSaveToDatabase={(updates) =>
+                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                }
+              />
             </TabsContent>
             <TabsContent value="headers">
-              <div className="flex flex-col px-4 py-2 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-md font-medium">Headers</h2>
-                  <Button size="sm" variant="ghost" className="text-primary">
-                    <Plus className="h-4 w-4" />
-                    <span>Add Header</span>
-                  </Button>
-                </div>
-              </div>
+              <HeadersSection
+                headers={requestObj.headers || {}}
+                onHeadersChange={(headers) => setRequestObj((prev) => ({ ...prev, headers }))}
+                onSaveToDatabase={(updates) =>
+                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                }
+              />
             </TabsContent>
             <TabsContent value="auth">
               <div className="flex flex-col p-4 h-full">
@@ -150,6 +151,20 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                     Add Body
                   </Button>
                 </div>
+                <div className="mt-4 flex-1">
+                  <textarea
+                    value={requestObj.body || ''}
+                    onChange={(e) => {
+                      const newBody = e.target.value
+                      setRequestObj((prev) => ({ ...prev, body: newBody }))
+                      debounce(() => {
+                        updateRequest.mutateAsync({ ...requestObj, body: newBody })
+                      }, 300)()
+                    }}
+                    placeholder="Enter request body..."
+                    className="w-full h-full p-2 border rounded-md resize-none font-mono text-sm"
+                  />
+                </div>
               </div>
             </TabsContent>
             <TabsContent value="exports">
@@ -167,7 +182,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         <div className="flex flex-col w-1/2 p-4">
           <div className="mb-4">
             <h2 className="text-lg font-semibold mb-2">
-              {content.method} {content.url || <span className="text-muted">(no url)</span>}
+              {requestObj.method} {requestObj.url || <span className="text-muted">(no url)</span>}
             </h2>
             {content.id && (
               <div className="text-xs text-muted-foreground mb-2">
@@ -180,25 +195,25 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Method</label>
-              <div className="text-sm text-muted-foreground">{content.method}</div>
+              <div className="text-sm text-muted-foreground">{requestObj.method}</div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">URL</label>
-              <div className="text-sm text-muted-foreground">{content.url || 'No URL set'}</div>
+              <div className="text-sm text-muted-foreground">{requestObj.url || 'No URL set'}</div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Headers</label>
               <div className="text-xs text-muted-foreground">
-                {Object.keys(content.headers).length} headers
+                {Object.keys(requestObj.headers || {}).length} headers
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Query Parameters</label>
               <div className="text-xs text-muted-foreground">
-                {Object.keys(content.queryParams).length} parameters
+                {Object.keys(requestObj.queryParams || {}).length} parameters
               </div>
             </div>
           </div>

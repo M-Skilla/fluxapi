@@ -20,6 +20,7 @@ export interface CreateRequestRequest {
   method: string
   url: string
   headers?: Record<string, string>
+  queryParams?: Record<string, string>
   body?: string
 }
 
@@ -29,6 +30,7 @@ export interface UpdateRequestRequest {
   method?: string
   url?: string
   headers?: Record<string, string>
+  queryParams?: Record<string, string>
   body?: string
 }
 
@@ -37,10 +39,15 @@ const getRequests = async (collectionId: number): Promise<Request[]> => {
   return await window.api.getRequests(collectionId)
 }
 
+const getRequest = async (requestId: number): Promise<Request | undefined> => {
+  return await window.api.getRequest(requestId)
+}
+
 const createRequest = async (data: CreateRequestRequest): Promise<{ id: number }> => {
   // Convert headers object to JSON string if provided
   const requestData = {
     ...data,
+    queryParams: data.queryParams ? JSON.stringify(data.queryParams) : '{}',
     headers: data.headers ? JSON.stringify(data.headers) : null
   }
   return await window.api.addRequest(requestData)
@@ -50,6 +57,7 @@ const updateRequest = async (data: UpdateRequestRequest): Promise<{ changes: num
   // Convert headers object to JSON string if provided
   const requestData = {
     ...data,
+    queryParams: data.queryParams ? JSON.stringify(data.queryParams) : '{}',
     headers: data.headers ? JSON.stringify(data.headers) : null
   }
   return await window.api.updateRequest(requestData)
@@ -65,6 +73,15 @@ export const useRequests = (collectionId: number) => {
     queryKey: ['requests', collectionId],
     queryFn: () => getRequests(collectionId),
     enabled: !!collectionId,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  })
+}
+
+export const useRequest = (requestId: number) => {
+  return useQuery({
+    queryKey: ['request', requestId],
+    queryFn: () => getRequest(requestId),
+    enabled: !!requestId,
     staleTime: 5 * 60 * 1000 // 5 minutes
   })
 }
@@ -93,18 +110,39 @@ export const useUpdateRequest = () => {
   return useMutation({
     mutationFn: updateRequest,
     onSuccess: (_, variables) => {
-      // Update the corresponding tab title if the request name was changed
+      // Update the corresponding tab title and content if the request name was changed
       if (variables.name) {
         const requestTab = tabs.find(
           (tab) => tab.type === 'request' && (tab.content as any)?.id === variables.id
         )
         if (requestTab) {
-          updateTab(requestTab.id, { title: variables.name })
+          updateTab(requestTab.id, {
+            title: variables.name,
+            content: {
+              ...requestTab.content,
+              ...variables
+            }
+          })
+        }
+      } else {
+        // Update tab content for other changes
+        const requestTab = tabs.find(
+          (tab) => tab.type === 'request' && (tab.content as any)?.id === variables.id
+        )
+        if (requestTab) {
+          updateTab(requestTab.id, {
+            content: {
+              ...requestTab.content,
+              ...variables
+            }
+          })
         }
       }
 
       // Invalidate all requests queries since we don't know the collection_id
       queryClient.invalidateQueries({ queryKey: ['requests'] })
+      // Also invalidate the specific request query
+      queryClient.invalidateQueries({ queryKey: ['request', variables.id] })
     },
     onError: (error) => {
       console.error('Failed to update request:', error)
