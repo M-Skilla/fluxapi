@@ -180,8 +180,62 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
             </TabsContent>
           </Tabs>
         </div>
-        <div className="flex flex-col w-1/2 p-4">
-          <div className="mb-4">
+        <div className="flex flex-col w-1/2">
+        <Tabs defaultValue="request" className="h-full">
+          <TabsList>
+            <TabsTrigger value="request">Request</TabsTrigger>
+            <TabsTrigger value="response">Response</TabsTrigger>
+          </TabsList>
+          <TabsContent value="request" className="h-full">
+            <div className="h-full p-4">
+              <pre className="whitespace-pre-wrap break-all text-sm text-muted-foreground">
+                {requestObj.method} {requestObj.url || '(no url)'}
+                {requestObj.headers && Object.keys(requestObj.headers).length > 0 && (
+                  <>
+                    {'\n'}
+                    {'\n'}Headers:
+                    {Object.entries(requestObj.headers).map(([key, value]) => (
+                      <div key={key}>
+                        {key}: {value}
+                      </div>
+                    ))}
+                  </>
+                )}
+                {requestObj.auth && Object.keys(requestObj.auth).length > 0 && (
+                  <>
+                    {'\n'}
+                    {'\n'}Auth:
+                    <div>{JSON.stringify(requestObj.auth)}</div>
+                  </>
+                )}
+                {requestObj.queryParams && Object.keys(requestObj.queryParams).length > 0 && (
+                  <>
+                    {'\n'}
+                    {'\n'}Query Parameters:
+                    {Object.entries(requestObj.queryParams).map(([key, value]) => (
+                      <div key={key}>
+                        {key}: {value}
+                      </div>
+                    ))}
+                  </>
+                )}
+                {requestObj.body && (
+                  <>
+                    {'\n'}
+                    {'\n'}Body:
+                    <div>{JSON.stringify(requestObj.body)}</div>
+                  </>
+                )}
+              </pre>
+            </div>
+          </TabsContent>
+          <TabsContent value="response" className="h-full">
+            <div className="h-full p-4 border rounded-md bg-bg">
+              <div className="text-sm text-muted-foreground">No response yet.</div>
+            </div>
+          </TabsContent>
+          </Tabs>
+          {/* <div className="mb-4">
             <h2 className="text-lg font-semibold mb-2">
               {requestObj.method} {requestObj.url || <span className="text-muted">(no url)</span>}
             </h2>
@@ -223,7 +277,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                 {Object.keys(requestObj.queryParams || {}).length} parameters
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
