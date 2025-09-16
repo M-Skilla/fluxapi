@@ -11,6 +11,11 @@ import ParamsSection from './params-section'
 import HeadersSection from './headers-section'
 import AuthSection from './auth-section'
 import BodySection from './body-section'
+import CodeMirrorResponse from './cm-response'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
+import { ChevronDown } from 'lucide-react'
+import { useResponseStore } from '@/stores/response-store'
 
 // Simple debounce utility
 const debounce = (func: Function, wait: number) => {
@@ -41,6 +46,11 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
 
   const [hasErrors, setHasErrors] = React.useState(false)
   const [requestName, setRequestName] = React.useState('')
+  const [responseCollapsed, setResponseCollapsed] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState('request')
+
+  // Response store
+  const { response, isLoading, error, sendRequest } = useResponseStore()
 
   const hasInitialized = React.useRef(false)
 
@@ -90,10 +100,44 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     updateRequestDebounced({ name: newName })
   }
 
-  const sendRequest = () => {
-    setTimeout(() => {
-      console.log('Sending request...')
-    }, 2000)
+  const handleSendRequest = async () => {
+    if (!requestObj.url) {
+      alert('Please enter a URL')
+      return
+    }
+
+    try {
+      let requestData: any = undefined
+
+      if (requestObj.body && typeof requestObj.body === 'object') {
+        const bodyObj = requestObj.body as any
+        if (bodyObj.content) {
+          if (bodyObj.contentType === 'json') {
+            try {
+              requestData = JSON.parse(bodyObj.content)
+            } catch {
+              requestData = bodyObj.content
+            }
+          } else {
+            requestData = bodyObj.content
+          }
+        }
+      }
+
+      await sendRequest({
+        method: requestObj.method!,
+        url: requestObj.url,
+        headers: requestObj.headers || {},
+        data: requestData,
+        params: requestObj.queryParams || {},
+      })
+
+      // Switch to response tab when request completes
+      setActiveTab('response')
+    } catch (error) {
+      console.error('Request failed:', error)
+      setActiveTab('response') // Still switch to response tab to show error
+    }
   }
 
   return (
@@ -116,18 +160,35 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           className="flex-1 text-neutral-200"
           placeholder="https://jsonplaceholder.typicode.com/posts"
         />
-        <Button onClick={sendRequest} className="text-neutral-200" size="sm" disabled={hasErrors}>
+        <Button onClick={handleSendRequest} className="text-neutral-200" size="sm" disabled={hasErrors || isLoading || !requestObj.url}>
           <Send className="h-4 w-4" />
-          <span>Send</span>
+          <span>{isLoading ? 'Sending...' : 'Send'}</span>
         </Button>
       </div>
       <div className="flex h-full">
         <div className="flex flex-col w-1/2 border-r">
           <Tabs defaultValue="params" className="h-full">
             <TabsList>
-              <TabsTrigger value="params">Params <span className='text-primary font-extrabold'>{Object.keys(requestObj.queryParams || {}).length}</span></TabsTrigger>
-              <TabsTrigger value="headers">Headers <span className='text-primary font-extrabold'>{Object.keys(requestObj.headers || {}).length}</span></TabsTrigger>
-              <TabsTrigger value="auth">Auth {requestObj.auth ? <div className='bg-primary w-2 h-2 rounded-full'></div> : <></>}</TabsTrigger>
+              <TabsTrigger value="params">
+                Params{' '}
+                {Object.keys(requestObj.queryParams || {}).length > 0 && (
+                  <span className="text-primary font-extrabold">
+                    {Object.keys(requestObj.queryParams || {}).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="headers">
+                Headers{' '}
+                {Object.keys(requestObj.headers || {}).length > 0 && (
+                  <span className="text-primary font-extrabold">
+                    {Object.keys(requestObj.headers || {}).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="auth">
+                Auth{' '}
+                {requestObj.auth && requestObj.auth?.type !== 'no-auth' ? <div className="bg-primary w-2 h-2 rounded-full"></div> : <></>}
+              </TabsTrigger>
               <TabsTrigger value="body">Body</TabsTrigger>
               <TabsTrigger value="exports">Exports</TabsTrigger>
             </TabsList>
@@ -181,59 +242,89 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           </Tabs>
         </div>
         <div className="flex flex-col w-1/2">
-        <Tabs defaultValue="request" className="h-full">
-          <TabsList>
-            <TabsTrigger value="request">Request</TabsTrigger>
-            <TabsTrigger value="response">Response</TabsTrigger>
-          </TabsList>
-          <TabsContent value="request" className="h-full">
-            <div className="h-full p-4">
-              <pre className="whitespace-pre-wrap break-all text-sm text-muted-foreground">
-                {requestObj.method} {requestObj.url || '(no url)'}
-                {requestObj.headers && Object.keys(requestObj.headers).length > 0 && (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+            <TabsList>
+              <TabsTrigger value="request">Request</TabsTrigger>
+              <TabsTrigger value="response">Response</TabsTrigger>
+            </TabsList>
+            <TabsContent value="request" className="h-full">
+              <div className="h-full p-4"></div>
+            </TabsContent>
+            <TabsContent value="response" className="h-full">
+              <div className="h-full p-4 overflow-auto my-scrollbar">
+                {isLoading && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-muted-foreground">Sending request...</div>
+                  </div>
+                )}
+
+                {error && !response && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md mb-4">
+                    <div className="text-sm text-destructive font-medium">Request Failed</div>
+                    <div className="text-sm text-destructive/80 mt-1">{error}</div>
+                  </div>
+                )}
+
+                {response && (
                   <>
-                    {'\n'}
-                    {'\n'}Headers:
-                    {Object.entries(requestObj.headers).map(([key, value]) => (
-                      <div key={key}>
-                        {key}: {value}
+                    <Collapsible
+                      open={responseCollapsed}
+                      onOpenChange={setResponseCollapsed}
+                      className="mb-4"
+                    >
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
+                        <span className="text-sm font-medium">
+                          HTTP/{response.status >= 200 && response.status < 300 ? '1.1' : '1.1'} {response.status} {response.statusText} ({Object.keys(response.headers).length} headers)
+                        </span>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-1/3">Header</TableHead>
+                              <TableHead>Value</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {Object.entries(response.headers).map(([key, value]) => (
+                              <TableRow key={key}>
+                                <TableCell className="font-medium">{key}</TableCell>
+                                <TableCell>{String(value)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CollapsibleContent>
+                    </Collapsible>
+
+                    <div className="mb-4">
+                      <div className="text-xs text-muted-foreground mb-2">
+                        Response time: {response.responseTime}ms • Size: {response.size} bytes
                       </div>
-                    ))}
+                    </div>
+
+                    <CodeMirrorResponse
+                      language={
+                        response.headers['content-type']?.includes('json') ? 'json' :
+                        response.headers['content-type']?.includes('xml') ? 'xml' :
+                        response.headers['content-type']?.includes('yaml') || response.headers['content-type']?.includes('yml') ? 'yaml' :
+                        'javascript'
+                      }
+                      value={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
+                    />
                   </>
                 )}
-                {requestObj.auth && Object.keys(requestObj.auth).length > 0 && (
-                  <>
-                    {'\n'}
-                    {'\n'}Auth:
-                    <div>{JSON.stringify(requestObj.auth)}</div>
-                  </>
+
+                {!response && !isLoading && !error && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-muted-foreground">No response yet. Send a request to see the response here.</div>
+                  </div>
                 )}
-                {requestObj.queryParams && Object.keys(requestObj.queryParams).length > 0 && (
-                  <>
-                    {'\n'}
-                    {'\n'}Query Parameters:
-                    {Object.entries(requestObj.queryParams).map(([key, value]) => (
-                      <div key={key}>
-                        {key}: {value}
-                      </div>
-                    ))}
-                  </>
-                )}
-                {requestObj.body && (
-                  <>
-                    {'\n'}
-                    {'\n'}Body:
-                    <div>{JSON.stringify(requestObj.body)}</div>
-                  </>
-                )}
-              </pre>
-            </div>
-          </TabsContent>
-          <TabsContent value="response" className="h-full">
-            <div className="h-full p-4 border rounded-md bg-bg">
-              <div className="text-sm text-muted-foreground">No response yet.</div>
-            </div>
-          </TabsContent>
+              </div>
+            </TabsContent>
           </Tabs>
           {/* <div className="mb-4">
             <h2 className="text-lg font-semibold mb-2">

@@ -210,17 +210,17 @@
 
 /* Modern Scrollbar Styles */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 9px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: hsl(var(--primary));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background-color: hsl(var(--muted-foreground) / 0.3);
   border-radius: 4px;
   transition: background-color 0.2s ease;
 }

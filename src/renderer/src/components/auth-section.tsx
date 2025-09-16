@@ -15,6 +15,10 @@ const AuthSection: React.FC<AuthSectionProps> = ({ auth, onSaveToDatabase }) => 
 
   const handleAuthTypeChange = (value: AuthType) => {
     setAuthType(value)
+    if (value == 'no-auth') {
+      onSaveToDatabase({ auth: { type: 'no-auth' } })
+      return
+    }
     onSaveToDatabase({ auth: { ...auth, type: value } })
   }
 
