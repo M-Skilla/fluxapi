@@ -53,8 +53,13 @@ const RequestMenuButton = ({ request, onClick }: RequestMenuButtonProps) => {
   const handleEditSave = () => {
     if (editName.trim() && editName !== (request.name || 'Untitled')) {
       updateMutation.mutate({
+        ...request,
+        headers: JSON.parse(request.headers || '{}'),
+        auth: JSON.parse(request.auth || '{}'),
+        queryParams: JSON.parse(request.queryParams || '{}'),
+        body: request.body ? (typeof request.body === 'string' ? JSON.parse(request.body) : request.body) : { type: 'text', content: '', contentType: 'json' },
         id: request.id,
-        name: editName.trim()
+        name: editName.trim(),
       })
     }
     setIsEditing(false)
