@@ -292,7 +292,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                             {Object.entries(response.headers).map(([key, value]) => (
                               <TableRow key={key}>
                                 <TableCell className="font-medium">{key}</TableCell>
-                                <TableCell className='break-words'>{String(value)}</TableCell>
+                                <TableCell className='wrap-break-word'>{String(value)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
