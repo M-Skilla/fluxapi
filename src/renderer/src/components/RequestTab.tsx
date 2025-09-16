@@ -10,6 +10,7 @@ import { useRequest } from '@/lib/requests-store'
 import ParamsSection from './params-section'
 import HeadersSection from './headers-section'
 import AuthSection from './auth-section'
+import BodySection from './body-section'
 
 // Simple debounce utility
 const debounce = (func: Function, wait: number) => {
@@ -35,8 +36,11 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     headers: content.headers || {},
     queryParams: content.queryParams || {},
     auth: content.auth || {},
-    body: content.body || ''
+    body: content.body || "{ type: 'text', content: '', contentType: 'json' }"
   })
+
+  const [hasErrors, setHasErrors] = React.useState(false)
+  const [requestName, setRequestName] = React.useState('')
 
   const hasInitialized = React.useRef(false)
 
@@ -50,8 +54,13 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         headers: dbRequest.headers ? JSON.parse(dbRequest.headers) : {},
         queryParams: dbRequest.queryParams ? JSON.parse(dbRequest.queryParams) : {},
         auth: dbRequest.auth ? JSON.parse(dbRequest.auth) : {},
-        body: dbRequest.body || ''
+        body: dbRequest.body
+          ? typeof dbRequest.body === 'string'
+            ? JSON.parse(dbRequest.body)
+            : dbRequest.body
+          : { type: 'text', content: '', contentType: 'json' }
       })
+      setRequestName(dbRequest.name || 'Untitled')
       hasInitialized.current = true
     }
   }, [dbRequest, isDbLoading])
@@ -73,6 +82,12 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     const newUrl = e.target.value
     setRequestObj((prev) => ({ ...prev, url: newUrl }))
     updateRequestDebounced({ url: newUrl })
+  }
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value
+    setRequestName(newName)
+    updateRequestDebounced({ name: newName })
   }
 
   const sendRequest = () => {
@@ -101,7 +116,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           className="flex-1 text-neutral-200"
           placeholder="https://jsonplaceholder.typicode.com/posts"
         />
-        <Button onClick={sendRequest} className="text-neutral-200" size="sm">
+        <Button onClick={sendRequest} className="text-neutral-200" size="sm" disabled={hasErrors}>
           <Send className="h-4 w-4" />
           <span>Send</span>
         </Button>
@@ -110,9 +125,9 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         <div className="flex flex-col w-1/2 border-r">
           <Tabs defaultValue="params" className="h-full">
             <TabsList>
-              <TabsTrigger value="params">Params</TabsTrigger>
-              <TabsTrigger value="headers">Headers</TabsTrigger>
-              <TabsTrigger value="auth">Auth</TabsTrigger>
+              <TabsTrigger value="params">Params <span className='text-primary font-extrabold'>{Object.keys(requestObj.queryParams || {}).length}</span></TabsTrigger>
+              <TabsTrigger value="headers">Headers <span className='text-primary font-extrabold'>{Object.keys(requestObj.headers || {}).length}</span></TabsTrigger>
+              <TabsTrigger value="auth">Auth {requestObj.auth ? <div className='bg-primary w-2 h-2 rounded-full'></div> : <></>}</TabsTrigger>
               <TabsTrigger value="body">Body</TabsTrigger>
               <TabsTrigger value="exports">Exports</TabsTrigger>
             </TabsList>
@@ -145,28 +160,13 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               />
             </TabsContent>
             <TabsContent value="body">
-              <div className="flex flex-col p-4 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-md font-medium">Body</h2>
-                  <Button size="sm" variant="outline">
-                    Add Body
-                  </Button>
-                </div>
-                <div className="mt-4 flex-1">
-                  <textarea
-                    value={requestObj.body || ''}
-                    onChange={(e) => {
-                      const newBody = e.target.value
-                      setRequestObj((prev) => ({ ...prev, body: newBody }))
-                      debounce(() => {
-                        updateRequest.mutateAsync({ ...requestObj, body: newBody })
-                      }, 300)()
-                    }}
-                    placeholder="Enter request body..."
-                    className="w-full h-full p-2 border rounded-md resize-none font-mono text-sm"
-                  />
-                </div>
-              </div>
+              <BodySection
+                body={requestObj.body || {}}
+                onSaveToDatabase={(updates) =>
+                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                }
+                onErrors={setHasErrors}
+              />
             </TabsContent>
             <TabsContent value="exports">
               <div className="flex flex-col p-4 h-full">
@@ -208,6 +208,12 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               <label className="block text-sm font-medium mb-1">Headers</label>
               <div className="text-xs text-muted-foreground">
                 {Object.keys(requestObj.headers || {}).length} headers
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Auth</label>
+              <div className="text-xs text-muted-foreground">
+                {JSON.stringify(requestObj.auth) || ""}
               </div>
             </div>
 

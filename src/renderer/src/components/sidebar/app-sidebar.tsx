@@ -117,6 +117,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                                       ? JSON.parse(request.queryParams)
                                       : {},
                                     body: request.body
+                                      ? typeof request.body === 'string'
+                                        ? {
+                                            type: 'text',
+                                            content: request.body,
+                                            contentType: 'json'
+                                          }
+                                        : JSON.parse(request.body)
+                                      : { type: 'text', content: '', contentType: 'json' }
                                   }
                                 })
                               }
@@ -204,7 +212,7 @@ const CollectionRequests: React.FC<CollectionRequestsProps> = ({
           headers: {},
           auth: { type: 'no-auth' },
           queryParams: {},
-          body: null
+          body: { type: 'text', content: '', contentType: 'json' }
         }
       })
     } catch (error) {

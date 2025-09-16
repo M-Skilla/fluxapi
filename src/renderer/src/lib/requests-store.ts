@@ -60,10 +60,14 @@ const createRequest = async (data: CreateRequestRequest): Promise<{ id: number }
 const updateRequest = async (data: UpdateRequestRequest): Promise<{ changes: number }> => {
   // Convert objects to JSON strings if provided
   const requestData = {
-    ...data,
-    queryParams: data.queryParams ? JSON.stringify(data.queryParams) : '{}',
+    id: data.id,
+    name: data.name || null,
+    method: data.method || null,
+    url: data.url || null,
+    queryParams: data.queryParams ? JSON.stringify(data.queryParams) : null,
     headers: data.headers ? JSON.stringify(data.headers) : null,
-    auth: data.auth ? JSON.stringify(data.auth) : null
+    auth: data.auth ? JSON.stringify(data.auth) : null,
+    body: data.body ? (typeof data.body === 'string' ? data.body : JSON.stringify(data.body)) : null
   }
   return await window.api.updateRequest(requestData)
 }

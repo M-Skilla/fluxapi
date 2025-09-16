@@ -26,7 +26,7 @@ const AuthSection: React.FC<AuthSectionProps> = ({ auth, onSaveToDatabase }) => 
           <SelectTrigger className="w-[120px] h-[20px] text-xs">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-sidebar">
+          <SelectContent className="bg-bg">
             <SelectItem value="no-auth">No Auth</SelectItem>
             <SelectItem value="basic">Basic</SelectItem>
             <SelectItem value="bearer">Bearer</SelectItem>
