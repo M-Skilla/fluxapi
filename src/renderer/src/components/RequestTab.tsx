@@ -281,7 +281,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                         />
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-2">
-                        <Table>
+                        <Table className='w-full'>
                           <TableHeader>
                             <TableRow>
                               <TableHead className="w-1/3">Header</TableHead>
@@ -292,7 +292,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                             {Object.entries(response.headers).map(([key, value]) => (
                               <TableRow key={key}>
                                 <TableCell className="font-medium">{key}</TableCell>
-                                <TableCell>{String(value)}</TableCell>
+                                <TableCell className='break-words'>{String(value)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
