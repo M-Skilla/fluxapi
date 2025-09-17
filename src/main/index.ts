@@ -16,6 +16,7 @@ function createWindow(): void {
     height: 670,
     title: 'FluxAPI',
     show: false,
+    frame: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon: logo } : {}),
     webPreferences: {
@@ -43,24 +44,24 @@ function createWindow(): void {
   }
 }
 
-function cleanupDatabase() {
-  if (db) {
-    try {
-      // Drop all tables in reverse order due to foreign key constraints
-      const tables = ['history', 'variables', 'environments', 'requests', 'collections']
+// function cleanupDatabase() {
+//   if (db) {
+//     try {
+//       // Drop all tables in reverse order due to foreign key constraints
+//       const tables = ['history', 'variables', 'environments', 'requests', 'collections']
 
-      for (const table of tables) {
-        db.prepare(`DROP TABLE IF EXISTS ${table}`).run()
-      }
+//       for (const table of tables) {
+//         db.prepare(`DROP TABLE IF EXISTS ${table}`).run()
+//       }
 
-      console.log('Database tables cleaned up successfully')
-    } catch (error) {
-      console.error('Error cleaning up database:', error)
-    } finally {
-      db.close()
-    }
-  }
-}
+//       console.log('Database tables cleaned up successfully')
+//     } catch (error) {
+//       console.error('Error cleaning up database:', error)
+//     } finally {
+//       db.close()
+//     }
+//   }
+// }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

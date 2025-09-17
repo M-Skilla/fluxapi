@@ -1,52 +1,54 @@
 import React from 'react'
+import Logo from '@/assets/logo.png'
 import { Button } from '@/components/ui/button'
 import { Minus, Square, X } from 'lucide-react'
 
 const CustomTitleBar: React.FC = () => {
   const handleMinimize = () => {
-    window.api.minimizeWindow()
+    window.electron.ipcRenderer.invoke('minimize-window')
   }
 
   const handleMaximize = () => {
-    window.api.maximizeWindow()
+    window.electron.ipcRenderer.invoke('maximize-window')
   }
 
   const handleClose = () => {
-    window.api.closeWindow()
+    window.electron.ipcRenderer.invoke('close-window')
   }
 
   return (
     <div
-      id="title-bar"
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-10 bg-background border-b px-4 select-none"
+      className="w-full flex items-center justify-between h-8 bg-sidebar border-b border-border px-3 select-none flex-shrink-0 z-50"
+      style={{ appRegion: 'drag' } as React.CSSProperties}
     >
-      <div className="flex items-center">
-        <h1 className="text-sm font-semibold">FluxAPI</h1>
+      <div className="flex items-center gap-2">
+        <img src={Logo} className="h-5 w-7" alt="FluxAPI" />
+        <h1 className="text-sm font-medium text-foreground">FluxAPI</h1>
       </div>
-      <div className="flex items-center space-x-2 window-controls">
+      <div className="flex items-center" style={{ appRegion: 'no-drag' } as React.CSSProperties}>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={handleMinimize}
-          className="h-8 w-8 hover:bg-accent"
+          className="h-8 w-8 p-0 hover:bg-muted/50 rounded-none"
         >
-          <Minus className="h-2 w-2" />
+          <Minus className="h-3 w-3" />
         </Button>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={handleMaximize}
-          className="h-8 w-8 hover:bg-accent"
+          className="h-8 w-8 p-0 hover:bg-muted/50 rounded-none"
         >
-          <Square className="h-2 w-2" />
+          <Square className="h-3 w-3" />
         </Button>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={handleClose}
-          className="h-8 w-8 hover:bg-red-500 hover:text-white"
+          className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-none"
         >
-          <X className="h-2 w-2" />
+          <X className="h-3 w-3" />
         </Button>
       </div>
     </div>
