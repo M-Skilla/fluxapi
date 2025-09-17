@@ -1,7 +1,7 @@
 {
   "name": "fluxapi-beta",
   "productName": "FluxAPI Beta",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "A minimalist API client for developers.",
   "main": "./out/main/index.js",
   "author": "Skilla",
