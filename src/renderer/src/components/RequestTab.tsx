@@ -129,7 +129,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         url: requestObj.url,
         headers: requestObj.headers || {},
         data: requestData,
-        params: requestObj.queryParams || {},
+        params: requestObj.queryParams || {}
       })
 
       // Switch to response tab when request completes
@@ -160,7 +160,12 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           className="flex-1 text-neutral-200"
           placeholder="https://jsonplaceholder.typicode.com/posts"
         />
-        <Button onClick={handleSendRequest} className="text-neutral-200" size="sm" disabled={hasErrors || isLoading || !requestObj.url}>
+        <Button
+          onClick={handleSendRequest}
+          className="text-neutral-200"
+          size="sm"
+          disabled={hasErrors || isLoading || !requestObj.url}
+        >
           <Send className="h-4 w-4" />
           <span>{isLoading ? 'Sending...' : 'Send'}</span>
         </Button>
@@ -187,7 +192,11 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               </TabsTrigger>
               <TabsTrigger value="auth">
                 Auth{' '}
-                {requestObj.auth && requestObj.auth?.type !== 'no-auth' ? <div className="bg-primary w-2 h-2 rounded-full"></div> : <></>}
+                {requestObj.auth && requestObj.auth?.type !== 'no-auth' ? (
+                  <div className="bg-primary w-2 h-2 rounded-full"></div>
+                ) : (
+                  <></>
+                )}
               </TabsTrigger>
               <TabsTrigger value="body">Body</TabsTrigger>
               <TabsTrigger value="exports">Exports</TabsTrigger>
@@ -274,29 +283,39 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                     >
                       <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
                         <span className="text-sm font-medium">
-                          HTTP/{response.status >= 200 && response.status < 300 ? '1.1' : '1.1'} {response.status} {response.statusText} ({Object.keys(response.headers).length} headers)
+                          HTTP/{response.status >= 200 && response.status < 300 ? '1.1' : '1.1'}{' '}
+                          {response.status} {response.statusText} (
+                          {Object.keys(response.headers).length} headers)
                         </span>
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
                         />
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-2">
-                        <Table className='w-full'>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-1/3">Header</TableHead>
-                              <TableHead>Value</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {Object.entries(response.headers).map(([key, value]) => (
-                              <TableRow key={key}>
-                                <TableCell className="font-medium">{key}</TableCell>
-                                <TableCell className='wrap-break-word'>{String(value)}</TableCell>
+                        <div className="overflow-x-auto max-w-full">
+                          <Table className="w-full min-w-[400px]">
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-1/3 min-w-[120px] whitespace-nowrap">
+                                  Header
+                                </TableHead>
+                                <TableHead className="min-w-[200px]">Value</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                            </TableHeader>
+                            <TableBody>
+                              {Object.entries(response.headers).map(([key, value]) => (
+                                <TableRow key={key}>
+                                  <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
+                                    {key}
+                                  </TableCell>
+                                  <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
+                                    {String(value)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
                       </CollapsibleContent>
                     </Collapsible>
 
@@ -308,19 +327,29 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
 
                     <CodeMirrorResponse
                       language={
-                        response.headers['content-type']?.includes('json') ? 'json' :
-                        response.headers['content-type']?.includes('xml') ? 'xml' :
-                        response.headers['content-type']?.includes('yaml') || response.headers['content-type']?.includes('yml') ? 'yaml' :
-                        'javascript'
+                        response.headers['content-type']?.includes('json')
+                          ? 'json'
+                          : response.headers['content-type']?.includes('xml')
+                            ? 'xml'
+                            : response.headers['content-type']?.includes('yaml') ||
+                                response.headers['content-type']?.includes('yml')
+                              ? 'yaml'
+                              : 'javascript'
                       }
-                      value={typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)}
+                      value={
+                        typeof response.data === 'string'
+                          ? response.data
+                          : JSON.stringify(response.data, null, 2)
+                      }
                     />
                   </>
                 )}
 
                 {!response && !isLoading && !error && (
                   <div className="flex items-center justify-center py-8">
-                    <div className="text-sm text-muted-foreground">No response yet. Send a request to see the response here.</div>
+                    <div className="text-sm text-muted-foreground">
+                      No response yet. Send a request to see the response here.
+                    </div>
                   </div>
                 )}
               </div>

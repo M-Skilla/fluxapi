@@ -19,12 +19,12 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon: logo } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      webSecurity: false
+      sandbox: false
     }
   })
 
   mainWindow.on('ready-to-show', () => {
+    mainWindow.maximize()
     mainWindow.show()
   })
 
@@ -120,7 +120,7 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  cleanupDatabase()
+  // cleanupDatabase()
   if (process.platform !== 'darwin') {
     app.quit()
   }
