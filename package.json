@@ -1,10 +1,10 @@
 {
-  "name": "fluxapi",
-  "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "name": "FluxAPI Beta",
+  "version": "1.0.0-beta.1",
+  "description": "A minimalist API client for developers.",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Skilla",
+  "homepage": "#",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
