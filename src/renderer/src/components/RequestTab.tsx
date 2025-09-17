@@ -16,6 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { ChevronDown } from 'lucide-react'
 import { useResponseStore } from '@/stores/response-store'
+import { useTabsStore } from '@/lib/tabs-store'
 
 // Simple debounce utility
 const debounce = (func: Function, wait: number) => {
@@ -33,6 +34,44 @@ interface RequestTabProps {
 const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
   // Fetch fresh data from database on mount
   const { data: dbRequest, isLoading: isDbLoading } = useRequest(content.id!)
+  const { closeTab } = useTabsStore()
+
+  // Check if request exists in database, close tab if not
+  React.useEffect(() => {
+    if (!isDbLoading && !dbRequest && content.id) {
+      console.warn(`Request with ID ${content.id} not found in database. Closing tab.`)
+      // Use setTimeout to avoid immediate closure during initial render
+      const timeoutId = setTimeout(() => {
+        closeTab(content.id!.toString())
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    }
+    return undefined
+  }, [dbRequest, isDbLoading, content.id, closeTab])
+
+  // Don't render if request doesn't exist and we're not loading
+  if (!isDbLoading && !dbRequest && content.id) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-sm text-muted-foreground flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground"></div>
+          Request not found. Closing tab...
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state while checking database
+  if (isDbLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-sm text-muted-foreground flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-muted-foreground"></div>
+          Loading request...
+        </div>
+      </div>
+    )
+  }
 
   const [requestObj, setRequestObj] = React.useState<UpdateRequestRequest>({
     id: content.id!,
@@ -41,7 +80,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     headers: content.headers || {},
     queryParams: content.queryParams || {},
     auth: content.auth || {},
-    body: content.body || "{ type: 'text', content: '', contentType: 'json' }"
+    body: content.body || "{ type: 'none' }"
   })
 
   const [hasErrors, setHasErrors] = React.useState(false)
@@ -59,7 +98,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     if (status >= 200 && status < 300) return 'text-green-400' // Success
     if (status >= 300 && status < 400) return 'text-blue-400' // Redirection
     if (status >= 400 && status < 500) return 'text-orange-400' // Client Error
-    if (status >= 500) return 'text-red-400' // Server Error    
+    if (status >= 500) return 'text-red-400' // Server Error
     return 'text-gray-400' // Unknown
   }
 
@@ -78,9 +117,15 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     return 'Unknown'
   }
 
-  // Update local state only when database data is first loaded (on mount)
+  // Update local state when database data changes
   React.useEffect(() => {
-    if (!hasInitialized.current && dbRequest && !isDbLoading) {
+    if (dbRequest && !isDbLoading) {
+      const parsedBody = dbRequest.body
+        ? typeof dbRequest.body === 'string'
+          ? JSON.parse(dbRequest.body)
+          : dbRequest.body
+        : { type: 'none' }
+
       setRequestObj({
         id: dbRequest.id,
         method: dbRequest.method,
@@ -88,14 +133,14 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         headers: dbRequest.headers ? JSON.parse(dbRequest.headers) : {},
         queryParams: dbRequest.queryParams ? JSON.parse(dbRequest.queryParams) : {},
         auth: dbRequest.auth ? JSON.parse(dbRequest.auth) : {},
-        body: dbRequest.body
-          ? typeof dbRequest.body === 'string'
-            ? JSON.parse(dbRequest.body)
-            : dbRequest.body
-          : { type: 'text', content: '', contentType: 'json' }
+        body: parsedBody
       })
-      setRequestName(dbRequest.name || 'Untitled')
-      hasInitialized.current = true
+
+      // Only set name on first load to avoid overriding user edits
+      if (!hasInitialized.current) {
+        setRequestName(dbRequest.name || 'Untitled')
+        hasInitialized.current = true
+      }
     }
   }, [dbRequest, isDbLoading])
 
@@ -115,7 +160,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value
     setRequestObj((prev) => ({ ...prev, url: newUrl }))
-    updateRequestDebounced({ url: newUrl })
+    updateRequestDebounced({ url: newUrl, name: requestName })
   }
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,6 +192,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           }
         }
       }
+      setActiveTab('response')
 
       await sendRequest({
         method: requestObj.method!,
@@ -157,7 +203,6 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
       })
 
       // Switch to response tab when request completes
-      setActiveTab('response')
     } catch (error) {
       console.error('Request failed:', error)
       setActiveTab('response') // Still switch to response tab to show error
@@ -173,7 +218,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
             setRequestObj((prev) => ({ ...prev, method }))
             if (content.id) {
               debounce(() => {
-                updateRequest.mutateAsync({ ...requestObj, method })
+                updateRequest.mutateAsync({ ...requestObj, method, name: requestName })
               }, 300)()
             }
           }}
@@ -232,7 +277,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                   setRequestObj((prev) => ({ ...prev, queryParams: params }))
                 }
                 onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
                 }
               />
             </TabsContent>
@@ -241,7 +286,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                 headers={requestObj.headers || {}}
                 onHeadersChange={(headers) => setRequestObj((prev) => ({ ...prev, headers }))}
                 onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
                 }
               />
             </TabsContent>
@@ -249,7 +294,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               <AuthSection
                 auth={requestObj.auth || {}}
                 onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
                 }
               />
             </TabsContent>
@@ -257,7 +302,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               <BodySection
                 body={requestObj.body || {}}
                 onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates })
+                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
                 }
                 onErrors={setHasErrors}
               />
@@ -278,7 +323,10 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <TabsList>
               <TabsTrigger value="request">Request</TabsTrigger>
-              <TabsTrigger value="response">Response</TabsTrigger>
+              <TabsTrigger value="response">
+                Response{' '}
+                {response ? <div className="bg-primary w-2 h-2 rounded-full"></div> : <></>}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="request" className="h-full">
               <div className="h-full p-4"></div>

@@ -6,7 +6,7 @@ import BodyFile from './body-file'
 import BodyText from './body-text'
 import BodyForm from './body-form'
 
-export type BodyType = 'text' | 'file' | 'form'
+export type BodyType = 'text' | 'file' | 'form' | 'none'
 
 interface BodySectionProps {
   body: any
@@ -15,10 +15,14 @@ interface BodySectionProps {
 }
 
 const BodySection: React.FC<BodySectionProps> = ({ body, onSaveToDatabase, onErrors }) => {
-  const [bodyType, setBodyType] = useState<BodyType>(body?.type || 'text')
+  const [bodyType, setBodyType] = useState<BodyType>(body?.type || 'none')
 
   const handleBodyTypeChange = (value: BodyType) => {
     setBodyType(value)
+    if (value === 'none') {
+      onSaveToDatabase({ body: JSON.stringify({ type: 'none' as string }) })
+      return
+    }
     onSaveToDatabase({ body: { ...body, type: value } })
   }
 
@@ -30,7 +34,8 @@ const BodySection: React.FC<BodySectionProps> = ({ body, onSaveToDatabase, onErr
           <SelectTrigger className="w-[120px] h-[20px] text-xs">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-sidebar">
+          <SelectContent className="bg-bg">
+            <SelectItem value="none">None</SelectItem>
             <SelectItem value="text">Text</SelectItem>
             <SelectItem value="file">File</SelectItem>
             <SelectItem value="form">Form</SelectItem>
@@ -46,6 +51,11 @@ const BodySection: React.FC<BodySectionProps> = ({ body, onSaveToDatabase, onErr
         )}
         {bodyType === 'form' && (
           <BodyForm body={body} onSaveToDatabase={onSaveToDatabase} onErrors={onErrors} />
+        )}
+        {bodyType === 'none' && (
+          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+            No body
+          </div>
         )}
       </div>
     </div>

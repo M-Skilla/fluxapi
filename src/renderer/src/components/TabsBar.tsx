@@ -33,7 +33,7 @@ export const TabsBar: React.FC = () => {
           headers: {},
           auth: { type: 'no-auth' },
           queryParams: {},
-          body: { type: 'text', content: '', contentType: 'json' }
+          body: { type: 'none' }
         }
       })
     } catch (error) {

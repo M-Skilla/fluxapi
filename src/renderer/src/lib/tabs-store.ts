@@ -22,6 +22,10 @@ interface TabsState {
   getActiveTab: () => Tab | null
   getTabById: (tabId: string) => Tab | null
   getTabsByType: (type: Tab['type']) => Tab[]
+  validateTabs: () => Promise<void>
+
+  // Manual validation trigger
+  validateTabsManually: () => void
 }
 
 export const useTabsStore = create<TabsState>()(
@@ -170,6 +174,67 @@ export const useTabsStore = create<TabsState>()(
 
       getTabsByType: (type) => {
         return get().tabs.filter((tab) => tab.type === type)
+      },
+
+      validateTabs: async () => {
+        const currentTabs = get().tabs
+        const requestTabs = currentTabs.filter((tab) => tab.type === 'request')
+
+        if (requestTabs.length === 0) return
+
+        try {
+          const validationPromises = requestTabs.map(async (tab) => {
+            if (tab.content?.id) {
+              try {
+                const request = await window.api.getRequest(tab.content.id)
+                if (!request) {
+                  console.warn(`Removing tab ${tab.id}: request ${tab.content.id} not found`)
+                  return tab.id
+                }
+              } catch (error) {
+                console.warn(`Error validating request ${tab.content.id} for tab ${tab.id}:`, error)
+                // Don't remove tab on network errors, just log
+                return null
+              }
+            }
+            return null
+          })
+
+          const tabsToRemove = (await Promise.all(validationPromises)).filter(Boolean) as string[]
+
+          // Remove invalid tabs
+          if (tabsToRemove.length > 0) {
+            set((state) => {
+              const newTabs = state.tabs.filter((tab) => !tabsToRemove.includes(tab.id))
+              let newActiveTabId = state.activeTabId
+
+              // If active tab was removed, switch to another tab
+              if (state.activeTabId && tabsToRemove.includes(state.activeTabId)) {
+                const removedTabIndex = state.tabs.findIndex((tab) => tab.id === state.activeTabId)
+                if (newTabs.length > 0) {
+                  const nextIndex = Math.min(removedTabIndex, newTabs.length - 1)
+                  newActiveTabId = newTabs[nextIndex]?.id || null
+                } else {
+                  newActiveTabId = null
+                }
+              }
+
+              return {
+                tabs: newTabs,
+                activeTabId: newActiveTabId
+              }
+            })
+
+            console.log(`Cleaned up ${tabsToRemove.length} invalid tabs`)
+          }
+        } catch (error) {
+          console.error('Error during tab validation:', error)
+        }
+      },
+
+      // Manual validation trigger
+      validateTabsManually: () => {
+        get().validateTabs()
       }
     }),
     {

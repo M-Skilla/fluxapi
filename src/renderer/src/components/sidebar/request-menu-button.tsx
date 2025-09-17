@@ -57,7 +57,7 @@ const RequestMenuButton = ({ request, onClick }: RequestMenuButtonProps) => {
         headers: JSON.parse(request.headers || '{}'),
         auth: JSON.parse(request.auth || '{}'),
         queryParams: JSON.parse(request.queryParams || '{}'),
-        body: request.body ? (typeof request.body === 'string' ? JSON.parse(request.body) : request.body) : { type: 'text', content: '', contentType: 'json' },
+        body: request.body ? (typeof request.body === 'string' ? JSON.parse(request.body) : request.body) : { type: 'none' },
         id: request.id,
         name: editName.trim(),
       })
