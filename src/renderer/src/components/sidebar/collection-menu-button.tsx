@@ -57,6 +57,8 @@ const CollectionMenuButton = ({
     setIsEditing(false)
   }
 
+  const isDraft = collection.id === 1
+
   const handleEditCancel = () => {
     setEditName(collection.name)
     setIsEditing(false)
@@ -100,12 +102,14 @@ const CollectionMenuButton = ({
         <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
           <Folder size={16} />
         </div>{' '}
-        <span className="font-medium line-clamp-1 transition-all ease-in-out">{collection.name}</span>
+        <span className="font-medium line-clamp-1 transition-all ease-in-out">
+          {collection.name}
+        </span>
       </div>
       <div className="flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {showMenu && (
+            {showMenu && !isDraft && (
               <button
                 className="transition-all ease-linear duration-200 p-1 hover:bg-primary/20 rounded"
                 onClick={(e) => e.stopPropagation()}
@@ -119,10 +123,22 @@ const CollectionMenuButton = ({
             onCloseAutoFocus={(e) => e.preventDefault()}
             className="transition-all ease-linear duration-200"
           >
-            <DropdownMenuItem onClick={() => setIsEditing(true)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsEditing(true)
+              }}
+            >
+              Edit
+            </DropdownMenuItem>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete</DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Delete
+                </DropdownMenuItem>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -135,7 +151,10 @@ const CollectionMenuButton = ({
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => deleteMutation.mutate(collection.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteMutation.mutate(collection.id)
+                    }}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                     Delete
