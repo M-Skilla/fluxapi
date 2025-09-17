@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router'
+import { createHashRouter, RouterProvider } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Sidebar from './components/sidebar/sidebar'
 import Home from './pages/home'
@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
   }
 })
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     Component: Sidebar,
     children: [
@@ -30,9 +30,9 @@ const router = createBrowserRouter([
 function App(): React.JSX.Element {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="h-screen flex flex-col">
+      <div className="h-full flex flex-col">
         {/* <CustomTitleBar /> */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <RouterProvider router={router} />
         </div>
       </div>

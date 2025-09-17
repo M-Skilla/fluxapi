@@ -159,7 +159,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
-                disabled
+                  disabled
                   className={`hover:bg-primary/30 ${isActive ? 'bg-primary/20' : ''}`}
                   asChild
                 >

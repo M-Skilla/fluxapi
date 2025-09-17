@@ -42,7 +42,7 @@ export const TabsBar: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center bg-sidebar border-b pt-4 px-2 gap-1">
+    <div className="flex items-center bg-sidebar border-b pt-4 px-2 gap-1 flex-shrink-0">
       <SidebarTrigger className="-ml-1 mt-1" />
 
       {tabs.map((tab) => (

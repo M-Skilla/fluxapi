@@ -20,9 +20,9 @@ export default function Sidebar() {
   }, [tabs.length, validateTabs])
 
   return (
-    <SidebarProvider className="text-neutral-500">
+    <SidebarProvider className="text-neutral-500 h-full">
       <AppSidebar className="border-r border-r-neutral-700" />
-      <SidebarInset>
+      <SidebarInset className="flex flex-col h-full">
         <TabsBar />
         <div className="flex-1 min-h-0">
           {isValidating ? (

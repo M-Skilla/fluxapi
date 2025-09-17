@@ -16,10 +16,17 @@ const customDarkTheme = EditorView.theme(
       color: 'white',
       height: '100%'
     },
+    '.cm-scroller': {
+      overflow: 'auto',
+      fontFamily: "'Fira Code', monospace",
+      height: '100%'
+    },
     '.cm-content': {
       caretColor: 'white',
       fontFamily: "'Fira Code', monospace !important",
-      fontSize: '12px'
+      fontSize: '12px',
+      padding: '8px',
+      minHeight: '100%'
     },
     '.cm-cursor': {
       borderLeftColor: 'white'
@@ -146,12 +153,7 @@ const CodeMirrorResponse = ({
     }
   }, [value])
 
-  return (
-    <div
-      ref={editorRef}
-      className=" h-full overflow-hidden"
-    />
-  )
+  return <div ref={editorRef} className="h-full w-full border border-border rounded-md" />
 }
 
 export default CodeMirrorResponse

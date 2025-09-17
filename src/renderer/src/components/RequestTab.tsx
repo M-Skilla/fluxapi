@@ -204,8 +204,9 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
   }
 
   return (
-    <div className="flex flex-col h-full ">
-      <div className="flex gap-3 items-center py-2 px-4 border-b bg-sidebar">
+    <div className="h-full flex flex-col">
+      {/* Header section - fixed height */}
+      <div className="flex gap-3 items-center py-2 px-4 border-b bg-sidebar flex-shrink-0">
         <RequestSelect
           method={requestObj.method!}
           setMethod={(method) => {
@@ -233,10 +234,13 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           <span>{isLoading ? 'Sending...' : 'Send'}</span>
         </Button>
       </div>
-      <div className="flex h-full">
-        <div className="flex flex-col w-1/2 border-r">
-          <Tabs defaultValue="params" className="h-full">
-            <TabsList>
+
+      {/* Main content area - takes remaining height */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left side - Request configuration */}
+        <div className="flex flex-col w-1/2 border-r h-full">
+          <Tabs defaultValue="params" className="h-full flex flex-col">
+            <TabsList className="flex-shrink-0">
               <TabsTrigger value="params">
                 Params{' '}
                 {Object.keys(requestObj.queryParams || {}).length > 0 && (
@@ -264,297 +268,261 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               <TabsTrigger value="body">Body</TabsTrigger>
               <TabsTrigger value="exports">Exports</TabsTrigger>
             </TabsList>
-            <TabsContent value="params">
-              <ParamsSection
-                queryParams={requestObj.queryParams || {}}
-                onParamsChange={(params) =>
-                  setRequestObj((prev) => ({ ...prev, queryParams: params }))
-                }
-                onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
-                }
-              />
-            </TabsContent>
-            <TabsContent value="headers">
-              <HeadersSection
-                headers={requestObj.headers || {}}
-                onHeadersChange={(headers) => setRequestObj((prev) => ({ ...prev, headers }))}
-                onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
-                }
-              />
-            </TabsContent>
-            <TabsContent value="auth">
-              <AuthSection
-                auth={requestObj.auth || {}}
-                onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
-                }
-              />
-            </TabsContent>
-            <TabsContent value="body">
-              <BodySection
-                body={requestObj.body || {}}
-                onSaveToDatabase={(updates) =>
-                  updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
-                }
-                onErrors={setHasErrors}
-              />
-            </TabsContent>
-            <TabsContent value="exports">
-              <div className="flex flex-col p-4 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-md font-medium">Exports</h2>
-                  <Button size="sm" variant="outline">
-                    Add Export
-                  </Button>
+
+            <div className="flex-1 min-h-0">
+              <TabsContent value="params" className="h-full m-0">
+                <ParamsSection
+                  queryParams={requestObj.queryParams || {}}
+                  onParamsChange={(params) =>
+                    setRequestObj((prev) => ({ ...prev, queryParams: params }))
+                  }
+                  onSaveToDatabase={(updates) =>
+                    updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
+                  }
+                />
+              </TabsContent>
+              <TabsContent value="headers" className="h-full m-0">
+                <HeadersSection
+                  headers={requestObj.headers || {}}
+                  onHeadersChange={(headers) => setRequestObj((prev) => ({ ...prev, headers }))}
+                  onSaveToDatabase={(updates) =>
+                    updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
+                  }
+                />
+              </TabsContent>
+              <TabsContent value="auth" className="h-full m-0">
+                <AuthSection
+                  auth={requestObj.auth || {}}
+                  onSaveToDatabase={(updates) =>
+                    updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
+                  }
+                />
+              </TabsContent>
+              <TabsContent value="body" className="h-full m-0">
+                <BodySection
+                  body={requestObj.body || {}}
+                  onSaveToDatabase={(updates) =>
+                    updateRequest.mutateAsync({ ...requestObj, ...updates, name: requestName })
+                  }
+                  onErrors={setHasErrors}
+                />
+              </TabsContent>
+              <TabsContent value="exports" className="h-full m-0">
+                <div className="flex flex-col p-4 h-full overflow-auto">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-md font-medium">Exports</h2>
+                    <Button size="sm" variant="outline">
+                      Add Export
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
+            </div>
           </Tabs>
         </div>
-        <div className="flex flex-col w-1/2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-            <TabsList>
+
+        {/* Right side - Request/Response viewer */}
+        <div className="flex flex-col w-1/2 h-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <TabsList className="flex-shrink-0">
               <TabsTrigger value="request">Request</TabsTrigger>
               <TabsTrigger value="response">
                 Response{' '}
                 {response ? <div className="bg-primary w-2 h-2 rounded-full"></div> : <></>}
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="request" className="h-full">
-              <div className="h-full p-4 overflow-auto my-scrollbar">
-                {requestObj.url && (
-                  <>
-                    <Collapsible
-                      open={responseCollapsed}
-                      onOpenChange={setResponseCollapsed}
-                      className="mb-4"
-                    >
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
-                        <span className="text-sm font-medium">
-                          {requestObj.method} {requestObj.url}
-                        </span>
-                        <ChevronDown
-                          className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
-                        />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-2">
-                        <div className="overflow-x-auto max-w-full">
-                          <Table className="w-full min-w-[400px]">
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="w-1/3 min-w-[120px] whitespace-nowrap">
-                                  Header
-                                </TableHead>
-                                <TableHead className="min-w-[200px]">Value</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {Object.entries(requestObj.headers || {}).map(([key, val]) => (
-                                <TableRow key={key}>
-                                  <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
-                                    {key}
-                                  </TableCell>
-                                  <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
-                                    {String(val)}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                              {(!requestObj.headers ||
-                                Object.keys(requestObj.headers).length === 0) && (
-                                <TableRow>
-                                  <TableCell
-                                    colSpan={2}
-                                    className="text-center text-muted-foreground py-4"
-                                  >
-                                    No headers sent
-                                  </TableCell>
-                                </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
 
-                    <div className="mb-4">
-                      <div className="text-xs text-muted-foreground mb-2">
-                        HTTP/1.1 • {Object.keys(requestObj.headers || {}).length} headers
+            <div className="flex-1 min-h-0">
+              <TabsContent value="request" className="h-full m-0 flex flex-col">
+                <div className="flex-1 flex flex-col overflow-hidden p-4">
+                  {requestObj.url && (
+                    <>
+                      <div className="flex-shrink-0 space-y-4 mb-4">
+                        <Collapsible open={responseCollapsed} onOpenChange={setResponseCollapsed}>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
+                            <span className="text-sm font-medium">
+                              {requestObj.method} {requestObj.url}
+                            </span>
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
+                            />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-2">
+                            <div className="overflow-x-auto max-w-full">
+                              <Table className="w-full min-w-[400px]">
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="w-1/3 min-w-[120px] whitespace-nowrap">
+                                      Header
+                                    </TableHead>
+                                    <TableHead className="min-w-[200px]">Value</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {Object.entries(requestObj.headers || {}).map(([key, val]) => (
+                                    <TableRow key={key}>
+                                      <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
+                                        {key}
+                                      </TableCell>
+                                      <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
+                                        {String(val)}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                  {(!requestObj.headers ||
+                                    Object.keys(requestObj.headers).length === 0) && (
+                                    <TableRow>
+                                      <TableCell
+                                        colSpan={2}
+                                        className="text-center text-muted-foreground py-4"
+                                      >
+                                        No headers sent
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+
+                        <div className="text-xs text-muted-foreground">
+                          HTTP/1.1 • {Object.keys(requestObj.headers || {}).length} headers
+                        </div>
+                      </div>
+
+                      {requestObj.body &&
+                        typeof requestObj.body === 'object' &&
+                        (requestObj.body as any).content && (
+                          <div className="flex-1 flex flex-col min-h-0">
+                            <div className="text-xs text-muted-foreground mb-2 flex-shrink-0">
+                              Request Body
+                            </div>
+                            <div className="flex-1 min-h-0">
+                              <CodeMirrorResponse
+                                language={
+                                  (requestObj.body as any).contentType === 'json'
+                                    ? 'json'
+                                    : 'javascript'
+                                }
+                                value={(requestObj.body as any).content}
+                              />
+                            </div>
+                          </div>
+                        )}
+                    </>
+                  )}
+
+                  {!requestObj.url && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-sm text-muted-foreground">
+                        Enter a URL to see request details
                       </div>
                     </div>
+                  )}
+                </div>
+              </TabsContent>
 
-                    {requestObj.body &&
-                      typeof requestObj.body === 'object' &&
-                      (requestObj.body as any).content && (
-                        <div className="mb-4">
-                          <div className="text-xs text-muted-foreground mb-2">Request Body</div>
-                          <CodeMirrorResponse
-                            language={
-                              (requestObj.body as any).contentType === 'json'
-                                ? 'json'
-                                : 'javascript'
-                            }
-                            value={(requestObj.body as any).content}
-                          />
-                        </div>
-                      )}
-                  </>
-                )}
-
-                {!requestObj.url && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-sm text-muted-foreground">
-                      Enter a URL to see request details
+              <TabsContent value="response" className="h-full m-0 flex flex-col">
+                <div className="flex-1 flex flex-col overflow-hidden p-4">
+                  {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-sm text-muted-foreground">Sending request...</div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="response" className="h-full">
-              <div className="h-full p-4 overflow-auto my-scrollbar">
-                {isLoading && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-sm text-muted-foreground">Sending request...</div>
-                  </div>
-                )}
+                  )}
 
-                {error && !response && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md mb-4">
-                    <div className="text-sm text-destructive font-medium">Request Failed</div>
-                    <div className="text-sm text-destructive/80 mt-1">{error}</div>
-                  </div>
-                )}
+                  {error && !response && (
+                    <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md mb-4 flex-shrink-0">
+                      <div className="text-sm text-destructive font-medium">Request Failed</div>
+                      <div className="text-sm text-destructive/80 mt-1">{error}</div>
+                    </div>
+                  )}
 
-                {response && (
-                  <>
-                    <Collapsible
-                      open={responseCollapsed}
-                      onOpenChange={setResponseCollapsed}
-                      className="mb-4"
-                    >
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
-                        <span className="text-sm font-medium">
-                          HTTP/1.1{' '}
-                          <span className={`font-bold ${getStatusColor(response.status)}`}>
-                            {response.status}
-                          </span>{' '}
-                          <span className={getStatusColor(response.status)}>
-                            {getStatusText(response.status, response.statusText)}
-                          </span>{' '}
-                          ({Object.keys(response.headers).length} headers)
-                        </span>
-                        <ChevronDown
-                          className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
-                        />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-2">
-                        <div className="overflow-x-auto max-w-full">
-                          <Table className="w-full min-w-[400px]">
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="w-1/3 min-w-[120px] whitespace-nowrap">
-                                  Header
-                                </TableHead>
-                                <TableHead className="min-w-[200px]">Value</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {Object.entries(response.headers).map(([key, val]) => (
-                                <TableRow key={key}>
-                                  <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
-                                    {key}
-                                  </TableCell>
-                                  <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
-                                    {String(val)}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
+                  {response && (
+                    <>
+                      <div className="flex-shrink-0 space-y-4 mb-4">
+                        <Collapsible open={responseCollapsed} onOpenChange={setResponseCollapsed}>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
+                            <span className="text-sm font-medium">
+                              HTTP/1.1{' '}
+                              <span className={`font-bold ${getStatusColor(response.status)}`}>
+                                {response.status}
+                              </span>{' '}
+                              <span className={getStatusColor(response.status)}>
+                                {getStatusText(response.status, response.statusText)}
+                              </span>{' '}
+                              ({Object.keys(response.headers).length} headers)
+                            </span>
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
+                            />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-2">
+                            <div className="overflow-x-auto max-w-full">
+                              <Table className="w-full min-w-[400px]">
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="w-1/3 min-w-[120px] whitespace-nowrap">
+                                      Header
+                                    </TableHead>
+                                    <TableHead className="min-w-[200px]">Value</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {Object.entries(response.headers).map(([key, val]) => (
+                                    <TableRow key={key}>
+                                      <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
+                                        {key}
+                                      </TableCell>
+                                      <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
+                                        {String(val)}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+
+                        <div className="text-xs text-muted-foreground">
+                          Response time: {response.responseTime}ms • Size: {response.size} bytes
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
+                      </div>
 
-                    <div className="mb-4">
-                      <div className="text-xs text-muted-foreground mb-2">
-                        Response time: {response.responseTime}ms • Size: {response.size} bytes
+                      <div className="flex-1 min-h-0">
+                        <CodeMirrorResponse
+                          language={
+                            response.headers['content-type']?.includes('json')
+                              ? 'json'
+                              : response.headers['content-type']?.includes('xml')
+                                ? 'xml'
+                                : response.headers['content-type']?.includes('yaml') ||
+                                    response.headers['content-type']?.includes('yml')
+                                  ? 'yaml'
+                                  : 'javascript'
+                          }
+                          value={
+                            typeof response.data === 'string'
+                              ? response.data
+                              : JSON.stringify(response.data, null, 2)
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {!response && !isLoading && !error && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-sm text-muted-foreground">
+                        No response yet. Send a request to see the response here.
                       </div>
                     </div>
-
-                    <CodeMirrorResponse
-                      language={
-                        response.headers['content-type']?.includes('json')
-                          ? 'json'
-                          : response.headers['content-type']?.includes('xml')
-                            ? 'xml'
-                            : response.headers['content-type']?.includes('yaml') ||
-                                response.headers['content-type']?.includes('yml')
-                              ? 'yaml'
-                              : 'javascript'
-                      }
-                      value={
-                        typeof response.data === 'string'
-                          ? response.data
-                          : JSON.stringify(response.data, null, 2)
-                      }
-                    />
-                  </>
-                )}
-
-                {!response && !isLoading && !error && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-sm text-muted-foreground">
-                      No response yet. Send a request to see the response here.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
+                  )}
+                </div>
+              </TabsContent>
+            </div>
           </Tabs>
-          {/* <div className="mb-4">
-            <h2 className="text-lg font-semibold mb-2">
-              {requestObj.method} {requestObj.url || <span className="text-muted">(no url)</span>}
-            </h2>
-            {content.id && (
-              <div className="text-xs text-muted-foreground mb-2">
-                Request ID: {content.id}
-                {content.collectionId && ` | Collection ID: ${content.collectionId}`}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Method</label>
-              <div className="text-sm text-muted-foreground">{requestObj.method}</div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">URL</label>
-              <div className="text-sm text-muted-foreground">{requestObj.url || 'No URL set'}</div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Headers</label>
-              <div className="text-xs text-muted-foreground">
-                {Object.keys(requestObj.headers || {}).length} headers
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Auth</label>
-              <div className="text-xs text-muted-foreground">
-                {JSON.stringify(requestObj.auth) || ""}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Query Parameters</label>
-              <div className="text-xs text-muted-foreground">
-                {Object.keys(requestObj.queryParams || {}).length} parameters
-              </div>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>
