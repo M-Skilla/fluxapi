@@ -163,12 +163,6 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     updateRequestDebounced({ url: newUrl, name: requestName })
   }
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value
-    setRequestName(newName)
-    updateRequestDebounced({ name: newName })
-  }
-
   const handleSendRequest = async () => {
     if (!requestObj.url) {
       alert('Please enter a URL')
