@@ -1,6 +1,6 @@
 {
   "name": "fluxapi-beta",
-  "productName": "FluxAPI Beta", 
+  "productName": "FluxAPI Beta",
   "version": "1.0.0-beta.1",
   "description": "A minimalist API client for developers.",
   "main": "./out/main/index.js",
@@ -40,6 +40,7 @@
     "@codemirror/lang-xml": "^6.1.0",
     "@codemirror/lang-yaml": "^6.1.2",
     "@codemirror/theme-one-dark": "^6.1.3",
+    "@dnd-kit/core": "^6.3.1",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@hookform/resolvers": "^5.2.1",

@@ -6,14 +6,12 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { SidebarTitle } from './sidebar-title'
-import { History, Settings, Plus, Server } from 'lucide-react'
+import { Settings, Plus, Server } from 'lucide-react'
 import {
   useCollections,
   useCreateCollection,
