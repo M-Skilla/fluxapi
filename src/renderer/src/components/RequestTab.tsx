@@ -54,6 +54,30 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
 
   const hasInitialized = React.useRef(false)
 
+  // Function to get status color based on HTTP status code
+  const getStatusColor = (status: number) => {
+    if (status >= 200 && status < 300) return 'text-green-400' // Success
+    if (status >= 300 && status < 400) return 'text-blue-400' // Redirection
+    if (status >= 400 && status < 500) return 'text-orange-400' // Client Error
+    if (status >= 500) return 'text-red-400' // Server Error
+    return 'text-gray-400' // Unknown
+  }
+
+  // Function to get status text with fallback
+  const getStatusText = (status: number, statusText?: string) => {
+    if (statusText && statusText.trim()) return statusText
+    // Fallback status texts
+    if (status === 200) return 'OK'
+    if (status === 201) return 'Created'
+    if (status === 204) return 'No Content'
+    if (status === 400) return 'Bad Request'
+    if (status === 401) return 'Unauthorized'
+    if (status === 403) return 'Forbidden'
+    if (status === 404) return 'Not Found'
+    if (status === 500) return 'Internal Server Error'
+    return 'Unknown'
+  }
+
   // Update local state only when database data is first loaded (on mount)
   React.useEffect(() => {
     if (!hasInitialized.current && dbRequest && !isDbLoading) {
@@ -283,9 +307,14 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                     >
                       <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
                         <span className="text-sm font-medium">
-                          HTTP/{response.status >= 200 && response.status < 300 ? '1.1' : '1.1'}{' '}
-                          {response.status} {response.statusText} (
-                          {Object.keys(response.headers).length} headers)
+                          HTTP/1.1{' '}
+                          <span className={`font-bold ${getStatusColor(response.status)}`}>
+                            {response.status}
+                          </span>{' '}
+                          <span className={getStatusColor(response.status)}>
+                            {getStatusText(response.status, response.statusText)}
+                          </span>{' '}
+                          ({Object.keys(response.headers).length} headers)
                         </span>
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
@@ -303,13 +332,13 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {Object.entries(response.headers).map(([key, value]) => (
+                              {Object.entries(response.headers).map(([key, val]) => (
                                 <TableRow key={key}>
                                   <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
                                     {key}
                                   </TableCell>
                                   <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
-                                    {String(value)}
+                                    {String(val)}
                                   </TableCell>
                                 </TableRow>
                               ))}
