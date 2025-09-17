@@ -151,7 +151,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="border-t">
         <SidebarMenu>
           {[
-            { title: 'History', url: '/history', icon: History },
             { title: 'Environments', url: '/env', icon: Server },
             { title: 'Settings', url: '/settings', icon: Settings }
           ].map((item) => {
