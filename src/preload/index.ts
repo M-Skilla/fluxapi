@@ -34,7 +34,14 @@ const api = {
     auth?: string
     body?: string
   }) => ipcRenderer.invoke('db:update-request', data),
-  deleteRequest: (requestId: number) => ipcRenderer.invoke('db:delete-request', requestId)
+  deleteRequest: (requestId: number) => ipcRenderer.invoke('db:delete-request', requestId),
+  sendHttpRequest: (config: {
+    method: string
+    url: string
+    headers?: Record<string, string>
+    data?: any
+    params?: Record<string, string>
+  }) => ipcRenderer.invoke('send-http-request', config)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

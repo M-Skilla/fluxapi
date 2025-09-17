@@ -27,7 +27,7 @@ export function SidebarTitle() {
     <div className="flex flex-col w-full gap-2">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-3">
-          <img src={Logo} className="h-9 w-9" />
+          <img src={Logo} className="h-8 w-12" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

@@ -59,7 +59,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
     if (status >= 200 && status < 300) return 'text-green-400' // Success
     if (status >= 300 && status < 400) return 'text-blue-400' // Redirection
     if (status >= 400 && status < 500) return 'text-orange-400' // Client Error
-    if (status >= 500) return 'text-red-400' // Server Error
+    if (status >= 500) return 'text-red-400' // Server Error    
     return 'text-gray-400' // Unknown
   }
 

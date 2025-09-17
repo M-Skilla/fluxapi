@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import axios, { AxiosResponse, AxiosError } from 'axios'
 
 export interface ResponseData {
   status: number
@@ -46,62 +45,17 @@ export const useResponseStore = create<ResponseState>((set, get) => ({
     setLoading(true)
     setError(null)
 
-    const startTime = Date.now()
-
     try {
-      const response: AxiosResponse = await axios({
-        method: config.method,
-        url: config.url,
-        headers: config.headers,
-        data: config.data,
-        params: config.params,
-        timeout: 30000 // 30 second timeout
-      })
+      // Use the preload API instead of direct ipcRenderer
+      const result = await (window as any).api.sendHttpRequest(config)
 
-      const responseTime = Date.now() - startTime
-      const size = JSON.stringify(response.data).length
-
-      const responseData: ResponseData = {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers as Record<string, string>,
-        data: response.data,
-        responseTime,
-        size,
-        url: config.url,
-        method: config.method
-      }
-
-      setResponse(responseData)
-    } catch (error) {
-      const responseTime = Date.now() - startTime
-
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError
-
-        if (axiosError.response) {
-          // Server responded with error status
-          const errorResponse: ResponseData = {
-            status: axiosError.response.status,
-            statusText: axiosError.response.statusText,
-            headers: axiosError.response.headers as Record<string, string>,
-            data: axiosError.response.data,
-            responseTime,
-            size: JSON.stringify(axiosError.response.data).length,
-            url: config.url,
-            method: config.method
-          }
-          setResponse(errorResponse)
-        } else if (axiosError.request) {
-          // Request was made but no response received
-          setError(`Network Error: ${axiosError.message}`)
-        } else {
-          // Something else happened
-          setError(`Request Error: ${axiosError.message}`)
-        }
+      if (result.success) {
+        setResponse(result.data)
       } else {
-        setError(`Unknown Error: ${error}`)
+        setError(result.error)
       }
+    } catch (error) {
+      setError(`IPC Error: ${error}`)
     } finally {
       setLoading(false)
     }

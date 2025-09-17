@@ -5,6 +5,7 @@ import logo from '../../resources/logo.png?asset'
 import path from 'path'
 import Database from 'better-sqlite3'
 import { collectionDao, requestDao, initSchema } from './db'
+import axios, { AxiosResponse, AxiosError } from 'axios'
 
 let db: Database.Database
 
@@ -105,6 +106,79 @@ app.whenReady().then(async () => {
   ipcMain.handle('close-window', () => {
     const focusedWindow = BrowserWindow.getFocusedWindow()
     if (focusedWindow) focusedWindow.close()
+  })
+
+  // HTTP Request handler
+  ipcMain.handle('send-http-request', async (_event, config) => {
+    const startTime = Date.now()
+
+    try {
+      const response: AxiosResponse = await axios({
+        method: config.method,
+        url: config.url,
+        headers: config.headers,
+        data: config.data,
+        params: config.params,
+        timeout: 30000 // 30 second timeout
+      })
+
+      const responseTime = Date.now() - startTime
+      const size = JSON.stringify(response.data).length
+
+      return {
+        success: true,
+        data: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+          data: response.data,
+          responseTime,
+          size,
+          url: config.url,
+          method: config.method
+        }
+      }
+    } catch (error) {
+      const responseTime = Date.now() - startTime
+
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError
+
+        if (axiosError.response) {
+          // Server responded with error status
+          return {
+            success: true,
+            data: {
+              status: axiosError.response.status,
+              statusText: axiosError.response.statusText,
+              headers: axiosError.response.headers,
+              data: axiosError.response.data,
+              responseTime,
+              size: JSON.stringify(axiosError.response.data).length,
+              url: config.url,
+              method: config.method
+            }
+          }
+        } else if (axiosError.request) {
+          // Request was made but no response received
+          return {
+            success: false,
+            error: `Network Error: ${axiosError.message}`
+          }
+        } else {
+          // Something else happened
+          return {
+            success: false,
+            error: `Request Error: ${axiosError.message}`
+          }
+        }
+      } else {
+        return {
+          success: false,
+          error: `Unknown Error: ${error}`
+        }
+      }
+    }
   })
 
   createWindow()
