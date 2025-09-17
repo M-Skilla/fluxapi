@@ -329,7 +329,93 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="request" className="h-full">
-              <div className="h-full p-4"></div>
+              <div className="h-full p-4 overflow-auto my-scrollbar">
+                {requestObj.url && (
+                  <>
+                    <Collapsible
+                      open={responseCollapsed}
+                      onOpenChange={setResponseCollapsed}
+                      className="mb-4"
+                    >
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-bg rounded-md hover:bg-muted/70 transition-colors">
+                        <span className="text-sm font-medium">
+                          {requestObj.method} {requestObj.url}
+                        </span>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform ${responseCollapsed ? 'rotate-180' : ''}`}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2">
+                        <div className="overflow-x-auto max-w-full">
+                          <Table className="w-full min-w-[400px]">
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-1/3 min-w-[120px] whitespace-nowrap">
+                                  Header
+                                </TableHead>
+                                <TableHead className="min-w-[200px]">Value</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {Object.entries(requestObj.headers || {}).map(([key, val]) => (
+                                <TableRow key={key}>
+                                  <TableCell className="font-medium break-words min-w-[120px] max-w-[200px] whitespace-normal align-top">
+                                    {key}
+                                  </TableCell>
+                                  <TableCell className="table-cell-wrap min-w-[200px] whitespace-normal align-top">
+                                    {String(val)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                              {(!requestObj.headers ||
+                                Object.keys(requestObj.headers).length === 0) && (
+                                <TableRow>
+                                  <TableCell
+                                    colSpan={2}
+                                    className="text-center text-muted-foreground py-4"
+                                  >
+                                    No headers sent
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+
+                    <div className="mb-4">
+                      <div className="text-xs text-muted-foreground mb-2">
+                        HTTP/1.1 • {Object.keys(requestObj.headers || {}).length} headers
+                      </div>
+                    </div>
+
+                    {requestObj.body &&
+                      typeof requestObj.body === 'object' &&
+                      (requestObj.body as any).content && (
+                        <div className="mb-4">
+                          <div className="text-xs text-muted-foreground mb-2">Request Body</div>
+                          <CodeMirrorResponse
+                            language={
+                              (requestObj.body as any).contentType === 'json'
+                                ? 'json'
+                                : 'javascript'
+                            }
+                            value={(requestObj.body as any).content}
+                          />
+                        </div>
+                      )}
+                  </>
+                )}
+
+                {!requestObj.url && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-sm text-muted-foreground">
+                      Enter a URL to see request details
+                    </div>
+                  </div>
+                )}
+              </div>
             </TabsContent>
             <TabsContent value="response" className="h-full">
               <div className="h-full p-4 overflow-auto my-scrollbar">
