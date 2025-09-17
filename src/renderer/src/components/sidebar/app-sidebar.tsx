@@ -60,9 +60,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props} className="flex flex-col text-neutral-400">
-      <SidebarHeader className="border-b-2">
+      {/* <SidebarHeader className="border-b-2">
         <SidebarTitle />
-      </SidebarHeader>
+      </SidebarHeader> */}
       <SidebarActions />
       <SidebarContent className="flex-1 min-h-0">
         <SidebarGroup>
