@@ -50,18 +50,18 @@ const BodyText: React.FC<BodyTextProps> = ({ body, onSaveToDatabase, onErrors })
     })
   }
 
-  const getPlaceholder = () => {
-    switch (contentType) {
-      case 'json':
-        return '{\n  "key": "value"\n}'
-      case 'yaml':
-        return 'key: value\nnested:\n  key: value'
-      case 'xml':
-        return '<root>\n  <element>value</element>\n</root>'
-      default:
-        return 'Enter request body...'
-    }
-  }
+  // const getPlaceholder = () => {
+  //   switch (contentType) {
+  //     case 'json':
+  //       return '{\n  "key": "value"\n}'
+  //     case 'yaml':
+  //       return 'key: value\nnested:\n  key: value'
+  //     case 'xml':
+  //       return '<root>\n  <element>value</element>\n</root>'
+  //     default:
+  //       return 'Enter request body...'
+  //   }
+  // }
 
   return (
     <div className="flex flex-col h-full gap-4">
