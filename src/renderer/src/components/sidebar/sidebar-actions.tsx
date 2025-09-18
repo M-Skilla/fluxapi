@@ -43,7 +43,7 @@ const createRequestMutation = useCreateRequest()
   const collapseCollection = useSidebarStore(state => state.collapseCollections)
   const setShowCollectionInput = useSidebarStore(state => state.setShowCollectionInput)
   return (
-    <div className="flex justify-center gap-5 border-b">
+    <div className="flex justify-center gap-5 border-b mt-[5.5px]">
       <Button variant="ghost" size="sm" onClick={handleAddRequest} >
         <Plus className="h-4 w-4" />
       </Button>
