@@ -5,6 +5,7 @@ import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Send } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { UpdateRequestRequest, useUpdateRequest } from '@/lib'
 import { useRequest } from '@/lib/requests-store'
 import ParamsSection from './params-section'
@@ -47,6 +48,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
   const [requestName, setRequestName] = React.useState('')
   const [responseCollapsed, setResponseCollapsed] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState('request')
+  const [leftTabValue, setLeftTabValue] = React.useState('params')
   const hasInitialized = React.useRef(false)
 
   // Fetch fresh data from database on mount
@@ -131,6 +133,8 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
         ...prev,
         body: parsedBody
       }))
+
+      setRequestName(dbRequest.name || 'Untitled')
     }
   }, [dbRequest?.body, isDbLoading])
 
@@ -250,8 +254,13 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
           <div className="flex flex-1 min-h-0">
             {/* Left side - Request configuration */}
             <div className="flex flex-col w-1/2 border-r h-full">
-              <Tabs defaultValue="params" className="h-full flex flex-col">
-                <TabsList className="flex-shrink-0">
+              <Tabs
+                value={leftTabValue}
+                onValueChange={setLeftTabValue}
+                className="h-full flex flex-col"
+              >
+                {/* Desktop tabs - hidden on mobile */}
+                <TabsList className="flex-shrink-0 hidden lg:flex">
                   <TabsTrigger value="params">
                     Params{' '}
                     {Object.keys(requestObj.queryParams || {}).length > 0 && (
@@ -279,6 +288,32 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                   <TabsTrigger value="body">Body</TabsTrigger>
                   <TabsTrigger value="exports">Exports</TabsTrigger>
                 </TabsList>
+
+                {/* Mobile dropdown - visible on mobile only */}
+                <div className="flex-shrink-0 lg:hidden p-2">
+                  <Select value={leftTabValue} onValueChange={setLeftTabValue}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select tab" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="params">
+                        Params
+                        {Object.keys(requestObj.queryParams || {}).length > 0 &&
+                          ` (${Object.keys(requestObj.queryParams || {}).length})`}
+                      </SelectItem>
+                      <SelectItem value="headers">
+                        Headers
+                        {Object.keys(requestObj.headers || {}).length > 0 &&
+                          ` (${Object.keys(requestObj.headers || {}).length})`}
+                      </SelectItem>
+                      <SelectItem value="auth">
+                        Auth{requestObj.auth && requestObj.auth?.type !== 'no-auth' ? ' •' : ''}
+                      </SelectItem>
+                      <SelectItem value="body">Body</SelectItem>
+                      <SelectItem value="exports">Exports</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div className="flex-1 min-h-0">
                   <TabsContent value="params" className="h-full m-0">
@@ -335,7 +370,8 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
             {/* Right side - Request/Response viewer */}
             <div className="flex flex-col w-1/2 h-full">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                <TabsList className="flex-shrink-0">
+                {/* Desktop tabs - hidden on mobile */}
+                <TabsList className="flex-shrink-0 hidden lg:flex">
                   <TabsTrigger value="request">Request</TabsTrigger>
                   <TabsTrigger value="response">
                     Response{' '}
@@ -343,9 +379,22 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                   </TabsTrigger>
                 </TabsList>
 
+                {/* Mobile dropdown - visible on mobile only */}
+                <div className="flex-shrink-0 lg:hidden p-2">
+                  <Select value={activeTab} onValueChange={setActiveTab}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="request">Request</SelectItem>
+                      <SelectItem value="response">Response{response ? ' •' : ''}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex-1 min-h-0">
                   <TabsContent value="request" className="h-full m-0 flex flex-col">
-                    <div className="flex-1 flex flex-col overflow-hidden p-4">
+                    <div className="flex-1 flex flex-col overflow-auto p-4">
                       {requestObj.url && (
                         <>
                           <div className="flex-shrink-0 space-y-4 mb-4">
@@ -414,7 +463,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                                 <div className="text-xs text-muted-foreground mb-2 flex-shrink-0">
                                   Request Body
                                 </div>
-                                <div className="flex-1 min-h-0">
+                                <div className="flex-1 min-h-0 overflow-hidden">
                                   <CodeMirrorResponse
                                     language={
                                       (requestObj.body as any).contentType === 'json'
@@ -440,7 +489,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                   </TabsContent>
 
                   <TabsContent value="response" className="h-full m-0 flex flex-col">
-                    <div className="flex-1 flex flex-col overflow-hidden p-4">
+                    <div className="flex-1 flex flex-col overflow-auto p-4">
                       {isRequestLoading && (
                         <div className="flex items-center justify-center py-8">
                           <div className="text-sm text-muted-foreground">Sending request...</div>
@@ -456,7 +505,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
 
                       {response && (
                         <>
-                          <div className="flex-shrink-0 space-y-4 mb-4">
+                          <div className="flex-shrink-0 space-y-4">
                             <Collapsible
                               open={responseCollapsed}
                               onOpenChange={setResponseCollapsed}
@@ -509,7 +558,7 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                             </div>
                           </div>
 
-                          <div className="flex-1 min-h-0">
+                          <div className="flex-1 min-h-0 overflow-hidden mb-5">
                             <CodeMirrorResponse
                               language={
                                 response.headers['content-type']?.includes('json')
