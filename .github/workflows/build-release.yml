@@ -50,6 +50,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CI: true
           ELECTRON_BUILDER_COMPRESSION_LEVEL: 1
+          EP_SNAP_PUBLISH: false
         run: pnpm run ${{ matrix.buildScript }}
         timeout-minutes: 30
 
