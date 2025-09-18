@@ -9,6 +9,9 @@
   "build": {
     "appId": "com.fluxapi.app",
     "productName": "FluxAPI",
+    "snap": {
+      "publish": "never"
+    },
     "publish": [
       {
         "provider": "github",
