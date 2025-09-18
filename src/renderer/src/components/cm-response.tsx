@@ -122,7 +122,7 @@ const CodeMirrorResponse = ({
       customDarkTheme,
       EditorView.lineWrapping,
       lineNumbers(),
-      EditorView.editable.of(false) // Make it read-only
+      EditorState.readOnly.of(true) // Make it read-only but allow selection
     ]
 
     const state = EditorState.create({
