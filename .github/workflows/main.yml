@@ -23,10 +23,8 @@ jobs:
           node-version: 22   # use your Node version
           cache: 'pnpm'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8   # match your local pnpm version
+      - name: Install pnpm
+        run: npm install -g pnpm  # match your local pnpm version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
