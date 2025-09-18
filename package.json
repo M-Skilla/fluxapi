@@ -9,6 +9,16 @@
   "build": {
     "appId": "com.fluxapi.app",
     "productName": "FluxAPI",
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
     "snap": {
       "publish": "never"
     },

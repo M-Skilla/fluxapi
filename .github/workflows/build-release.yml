@@ -39,11 +39,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # 4.5️⃣ Install snapcraft (for Linux builds)
-      - name: Install snapcraft
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo snap install snapcraft --classic
-
       # 5️⃣ Build Electron app
       - name: Build Electron app
         env:
