@@ -1,49 +1,53 @@
 name: Manual Build and Release Electron App
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # Manual trigger
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'       # Automatic trigger on tag push
 
 jobs:
   build:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        buildScript: [build:linux, build:win] # Match OS with script
     runs-on: ${{ matrix.os }}
 
     steps:
+      # 1️⃣ Checkout the repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22   # use your Node version
+          node-version: 22
           cache: 'pnpm'
 
-      - name: Install pnpm
-        run: npm install -g pnpm  # match your local pnpm version
+      # 3️⃣ Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
+      # 4️⃣ Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 5️⃣ Build Electron app
       - name: Build Electron app
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            pnpm run build:linux
-          else
-            pnpm run build:win
-          fi
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm run ${{ matrix.buildScript }}
 
-      # Optional: Upload build artifacts to GitHub Releases
+      # 6️⃣ Upload release assets
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*
+          files: dist/*   # adjust if your output folder is different
           prerelease: ${{ contains(github.ref_name, '-') }}
+          tag_name: ${{ github.ref_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
