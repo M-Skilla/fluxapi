@@ -50,8 +50,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CI: true
           ELECTRON_BUILDER_COMPRESSION_LEVEL: 1
-          EP_SNAP_PUBLISH: false
-        run: pnpm run ${{ matrix.buildScript }}
+          ELECTRON_BUILDER_SKIP_SNAP_PUBLISH: true
+        run: pnpm run ${{ matrix.buildScript }} -- --publish never
         timeout-minutes: 30
 
       # 6️⃣ Upload release assets (only on tag push)
