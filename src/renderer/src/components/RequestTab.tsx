@@ -290,12 +290,12 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                 </TabsList>
 
                 {/* Mobile dropdown - visible on mobile only */}
-                <div className="flex-shrink-0 lg:hidden p-2">
+                <div className="flex-shrink-0 lg:hidden">
                   <Select value={leftTabValue} onValueChange={setLeftTabValue}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full rounded-none border-none">
                       <SelectValue placeholder="Select tab" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='bg-bg border-none rounded-none'>
                       <SelectItem value="params">
                         Params
                         {Object.keys(requestObj.queryParams || {}).length > 0 &&
@@ -380,12 +380,12 @@ const RequestTab: React.FC<RequestTabProps> = ({ content }) => {
                 </TabsList>
 
                 {/* Mobile dropdown - visible on mobile only */}
-                <div className="flex-shrink-0 lg:hidden p-2">
+                <div className="flex-shrink-0 lg:hidden">
                   <Select value={activeTab} onValueChange={setActiveTab}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full rounded-none border-none">
                       <SelectValue placeholder="Select view" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='bg-bg border-none rounded-none'>
                       <SelectItem value="request">Request</SelectItem>
                       <SelectItem value="response">Response{response ? ' •' : ''}</SelectItem>
                     </SelectContent>
